@@ -20,6 +20,10 @@ public:
 	void	touchesBegan( ci::app::TouchEvent event );
 	void	touchesMoved( ci::app::TouchEvent event );
 	void	touchesEnded( ci::app::TouchEvent event );
+
+	void	mouseDown( ci::app::MouseEvent event );
+    void	mouseUp( ci::app::MouseEvent event );
+	void	mouseDrag( ci::app::MouseEvent event );
     
 	void onSceneEvent( std::string event );
     XSceneRef mXSceneRef;
@@ -52,6 +56,21 @@ void UITestApp::draw()
 	gl::clear( Color( 0, 0, 0 ) );
 
 	mXSceneRef->deepDraw();
+}
+
+void UITestApp::mouseDown( ci::app::MouseEvent event )
+{
+	mXSceneRef->mouseDown(event);
+}
+
+void UITestApp::mouseUp( ci::app::MouseEvent event )
+{
+	mXSceneRef->mouseUp(event);
+}
+
+void UITestApp::mouseDrag( ci::app::MouseEvent event )
+{
+	mXSceneRef->mouseDrag(event);
 }
 
 void UITestApp::touchesBegan( ci::app::TouchEvent event )

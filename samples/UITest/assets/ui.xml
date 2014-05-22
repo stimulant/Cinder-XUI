@@ -18,7 +18,7 @@
 			end
 		end
 
-		function touchBegan(x, y)
+		function mouseDown(x, y)
 			print("touchBegan")
 			text.text = "Touch Down"
 			touched = true
@@ -28,7 +28,7 @@
 			sY = y - this.y
 		end
 
-		function touchMoved(x, y)
+		function mouseDrag(x, y)
 			print("touchMoved")
 			text.text = "Touch Moved"
 
@@ -37,7 +37,7 @@
 			lastX, lastY = this.x, this.y
 		end
 
-		function touchEnded(x, y)
+		function mouseUp(x, y)
 			print("touchEnded")
 			text.text = "Touch Ended"
 			touched = false

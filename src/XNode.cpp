@@ -95,7 +95,7 @@ void XNodeState::set()
 		mNode->dispatchStateEvent( mEvent );
 }
 
-XNode::XNode() : mVisible(true), mX(0.0f), mY(0.0f), mScale(ci::Vec2f(1.0f, 1.0f)), mRotation(0.0f), mOpacity(1.0f), mScript(NULL)
+XNode::XNode() : mVisible(true), mX(0.0f), mY(0.0f), mScale(ci::Vec2f(1.0f, 1.0f)), mRotation(0.0f), mOpacity(1.0f), mScript(NULL), mMouseDownInside(false)
 {	
 }
 
@@ -365,6 +365,104 @@ Vec2f XNode::globalToLocal( const Vec2f &pos )
     return (invMtx * Vec3f(pos.x,pos.y,0)).xy();    
 }
 
+
+bool XNode::deepMouseDown( ci::app::MouseEvent event )
+{
+	if (!mVisible)
+        return false;
+
+    bool consumed = false;
+
+    // check children
+    // use reverse so that things that will be drawn on top are checked first
+    for (XNodeRef &node : boost::adaptors::reverse(mChildren)) 
+	{
+        if (node->deepMouseDown(event)) 
+		{
+            consumed = true;
+            break; // first child wins (mouse can't affect more than one child node)
+        }
+    }    
+    if (!consumed) 
+	{
+        // check self
+        if (mouseDownInternal(event)) 
+		{
+            XNodeRef thisRef = shared_from_this();
+            dispatchMouseDown( XSceneEventRef( new XSceneEvent( thisRef, thisRef, event ) ) );
+			mMouseDownInside = true;
+            consumed = true;
+        }
+    }
+    return consumed;
+}
+
+bool XNode::deepMouseUp( ci::app::MouseEvent event )
+{
+	if (!mVisible)
+        return false;
+
+    // in this current implementation, children only receive mouseUp calls 
+    // if they returned true for mouse inside
+    bool consumed = false;
+	for (XNodeRef &node : boost::adaptors::reverse(mChildren)) 
+	{
+		if (node->deepMouseUp(event)) 
+		{
+			consumed = true;
+			break;
+		}
+	}
+
+	if (!consumed)
+	{
+		if (mMouseDownInside)
+		{
+			// check self
+			consumed = mouseUpInternal(event);
+			if (consumed) 
+			{
+				XNodeRef thisRef = shared_from_this();
+				dispatchMouseUp( XSceneEventRef( new XSceneEvent( thisRef, thisRef, event ) ) );
+			}
+			mMouseDownInside = false;
+		}
+	}
+    
+    return consumed;
+}
+
+bool XNode::deepMouseDrag( ci::app::MouseEvent event )
+{
+	if (!mVisible)
+        return false;
+
+    // in this current implementation, children only receive mouseDrag calls 
+    // if they have mouse down inside
+    bool consumed = false;
+	for (XNodeRef &node : boost::adaptors::reverse(mChildren)) 
+	{
+		if (node->deepMouseDrag(event)) 
+		{
+			consumed = true;
+			break;
+		}
+	}
+
+	if (!consumed && mMouseDownInside)
+	{
+		// check self
+		consumed = mouseDragInternal(event);
+		if (consumed)
+		{
+			XNodeRef thisRef = shared_from_this();
+			dispatchMouseDrag( XSceneEventRef( new XSceneEvent( thisRef, thisRef, event ) ) );
+		}
+	}
+    return consumed;
+}
+
+
 bool XNode::deepTouchBegan( TouchEvent::Touch touch )
 {
     if (!mVisible) {
@@ -382,7 +480,7 @@ bool XNode::deepTouchBegan( TouchEvent::Touch touch )
     }    
     if (!consumed) {
         // check self
-        if (touchBegan(touch)) {
+        if (touchBeganInternal(touch)) {
             XNodeRef thisRef = shared_from_this();
             mActiveTouches[touch.getId()] = thisRef;
             dispatchTouchBegan( XSceneEventRef( new XSceneEvent( thisRef, thisRef, touch ) ) );
@@ -394,48 +492,48 @@ bool XNode::deepTouchBegan( TouchEvent::Touch touch )
 
 bool XNode::deepTouchMoved( TouchEvent::Touch touch )
 {
-    if (!mVisible) {
+    if (!mVisible)
         return false;
-    }    
+
     // in this current implementation, children only receive touchMoved calls 
     // if they returned true for the touch with the same ID in touchesBegan
     bool consumed = false;
-    if ( mActiveTouches.find(touch.getId()) != mActiveTouches.end() ) {
+    if ( mActiveTouches.find(touch.getId()) != mActiveTouches.end() ) 
+	{
         XNodeRef node = mActiveTouches[touch.getId()];
-        if (node->getId() == this->getId()) {
+        if (node->getId() == this->getId()) 
+		{
             // check self
-            consumed = touchMoved(touch);
-            if (consumed) {
+            consumed = touchMovedInternal(touch);
+            if (consumed)
                 dispatchTouchMoved( XSceneEventRef( new XSceneEvent( node, node, touch ) ) );
-            }
         }
-        else {
+        else
             consumed = node->deepTouchMoved( touch );
-        }
     }
     return consumed;
 }
 
 bool XNode::deepTouchEnded( TouchEvent::Touch touch )
 {
-    if (!mVisible) {
+    if (!mVisible)
         return false;
-    }    
+
     // in this current implementation, children only receive touchEnded calls 
     // if they returned true for the touch with the same ID in touchesBegan
     bool consumed = false;
-    if ( mActiveTouches.find(touch.getId()) != mActiveTouches.end() ) {
+    if ( mActiveTouches.find(touch.getId()) != mActiveTouches.end() ) 
+	{
         XNodeRef node = mActiveTouches[touch.getId()];
-        if (node->getId() == this->getId()) {
+        if (node->getId() == this->getId()) 
+		{
             // check self
-            consumed = touchEnded(touch);
-            if (consumed) {
+            consumed = touchEndedInternal(touch);
+            if (consumed)
                 dispatchTouchEnded( XSceneEventRef( new XSceneEvent( node, node, touch ) ) );
-            }
         }
-        else {
+        else
             consumed = node->deepTouchEnded( touch );
-        }
         mActiveTouches.erase(touch.getId());
     }
     return consumed;
@@ -477,6 +575,54 @@ void XNode::dispatchStateEvent( const std::string& event )
 	// dispatch to our parent
 	if (XNodeRef parent = getParent()) {
 		parent->dispatchStateEvent( event );
+    }
+}
+
+void XNode::dispatchMouseDown( XSceneEventRef eventRef )
+{ 
+	setState("pressed");
+
+	bool handled = false;
+	for( CallbackMgr<bool (XSceneEventRef)>::iterator cbIter = mCbMouseDown.begin(); ( cbIter != mCbMouseDown.end() ) && ( ! handled ); ++cbIter ) {
+		handled = (cbIter->second)( eventRef );
+    }
+	if( !handled )	{
+        if (XNodeRef parent = getParent()) {
+            eventRef->setSourceRef( parent );
+            parent->dispatchMouseDown( eventRef );
+        }        
+    }    
+}
+
+void XNode::dispatchMouseDrag( XSceneEventRef eventRef )
+{ 
+	setState("moved");
+
+	bool handled = false;
+	for( CallbackMgr<bool (XSceneEventRef)>::iterator cbIter = mCbMouseDrag.begin(); ( cbIter != mCbMouseDrag.end() ) && ( ! handled ); ++cbIter ) {
+		handled = (cbIter->second)( eventRef );
+    }
+	if( !handled )	{
+        if (XNodeRef parent = getParent()) {
+            eventRef->setSourceRef( parent );    
+            parent->dispatchMouseDrag( eventRef );
+        }        
+    }    
+}
+
+void XNode::dispatchMouseUp( XSceneEventRef eventRef )
+{ 
+	setState("released");
+
+	bool handled = false;
+	for( CallbackMgr<bool (XSceneEventRef)>::iterator cbIter = mCbMouseUp.begin(); ( cbIter != mCbMouseUp.end() ) && ( ! handled ); ++cbIter ) {
+		handled = (cbIter->second)( eventRef );
+    }
+	if( !handled )	{
+        if (XNodeRef parent = getParent()) {
+            eventRef->setSourceRef( parent );
+            parent->dispatchMouseUp( eventRef );
+        }        
     }
 }
 

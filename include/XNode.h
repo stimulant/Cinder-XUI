@@ -10,6 +10,7 @@
 #include "cinder/Cinder.h"
 #include "cinder/Function.h"
 #include "cinder/app/TouchEvent.h"
+#include "cinder/app/MouseEvent.h"
 #include "cinder/Matrix.h"
 #include "cinder/Xml.h"
 #include "cinder/Color.h"
@@ -65,6 +66,11 @@ public:
         mTargetRef(targetRef),
         mSourceRef(sourceRef), 
         mTouch(touch) {}
+
+	XSceneEvent( XNodeRef targetRef, XNodeRef sourceRef, ci::app::MouseEvent event ): 
+        mTargetRef(targetRef),
+        mSourceRef(sourceRef), 
+        mMouseEvent(event) {}
     
     ~XSceneEvent() {}
 
@@ -77,15 +83,19 @@ public:
     // the raw screen-space touch that triggered this event
     ci::app::TouchEvent::Touch getTouch() { return mTouch; }    
 
+	// the raw mouse event that triggered this event
+    ci::app::MouseEvent getMouseEvent() { return mMouseEvent; }    
+
     void setTargetRef( XNodeRef targetRef ) { mTargetRef = targetRef; }
     void setSourceRef( XNodeRef sourceRef ) { mSourceRef = sourceRef; }    
     void setTouch( ci::app::TouchEvent::Touch touch ) { mTouch = touch; }    
+	void setMouseEvent( ci::app::MouseEvent mouseEvent ) { mMouseEvent = mouseEvent; }    
     
 private:
     
     XNodeRef mTargetRef, mSourceRef;
     ci::app::TouchEvent::Touch mTouch;
-    
+	ci::app::MouseEvent mMouseEvent;
 };
 
 typedef std::shared_ptr<XSceneEvent> XSceneEventRef;
@@ -189,12 +199,17 @@ public:
     virtual bool removedFromScene() { return false; }
     
 // INTERACTION HELPERS
+
+	// mouse interactions
+    virtual bool mouseDownInternal( ci::app::MouseEvent event ) { return false; }
+    virtual bool mouseDragInternal( ci::app::MouseEvent event ) { return false; }
+    virtual bool mouseUpInternal( ci::app::MouseEvent event ) { return false; }
             
     // interactions, one touch at a time
-    virtual bool touchBegan( ci::app::TouchEvent::Touch touch ) { return false; }
+    virtual bool touchBeganInternal( ci::app::TouchEvent::Touch touch ) { return false; }
     // touchMoved/Ended will only be called for touch IDs that returned true in touchBegan
-    virtual bool touchMoved( ci::app::TouchEvent::Touch touch ) { return false; }
-    virtual bool touchEnded( ci::app::TouchEvent::Touch touch ) { return false; }
+    virtual bool touchMovedInternal( ci::app::TouchEvent::Touch touch ) { return false; }
+    virtual bool touchEndedInternal( ci::app::TouchEvent::Touch touch ) { return false; }
     
     // override deepHitTest as well if you want to skip hit-testing children
     virtual bool hitTest( const ci::Vec2f &screenPos ) { return false; }
@@ -208,6 +223,12 @@ public:
     // recurse to children and call update()
     // (public so it can be overridden, but generally considered internal)
     virtual void deepUpdate( double elapsedSeconds );
+
+	// recurse to children and call mouseDown/mouseUp/mouseDrag
+    // (public so they can be overridden, but generally considered internal)
+	virtual bool deepMouseDown( ci::app::MouseEvent event );
+	virtual bool deepMouseUp( ci::app::MouseEvent event );
+	virtual bool deepMouseDrag( ci::app::MouseEvent event );
     
     // recurse to children and call touchBegan/Moved/Ended
     // (public so they can be overridden, but generally considered internal)
@@ -225,6 +246,22 @@ public:
 // EVENT STUFF
     
 	template<typename T>
+    ci::CallbackId registerMouseDown( T *obj, bool (T::*callback)(XSceneEventRef) )
+	{
+		return mCbMouseDown.registerCb(std::bind1st(std::mem_fun(callback), obj));
+	}    
+	template<typename T>
+    ci::CallbackId registerMouseDrag( T *obj, bool (T::*callback)(XSceneEventRef) )
+	{
+		return mCbMouseDrag.registerCb(std::bind1st(std::mem_fun(callback), obj));
+	}    
+	template<typename T>
+    ci::CallbackId registerMouseUp( T *obj, bool (T::*callback)(XSceneEventRef) )
+	{
+		return mCbMouseUp.registerCb(std::bind1st(std::mem_fun(callback), obj));
+	}
+
+	template<typename T>
     ci::CallbackId registerTouchBegan( T *obj, bool (T::*callback)(XSceneEventRef) )
 	{
 		return mCbTouchBegan.registerCb(std::bind1st(std::mem_fun(callback), obj));
@@ -240,6 +277,10 @@ public:
 		return mCbTouchEnded.registerCb(std::bind1st(std::mem_fun(callback), obj));
 	}
 	
+	void unregisterMouseDown( ci::CallbackId cbId ) { mCbMouseDown.unregisterCb( cbId ); }
+    void unregisterMouseDrag( ci::CallbackId cbId ) { mCbMouseDrag.unregisterCb( cbId ); }
+    void unregisterMouseUp( ci::CallbackId cbId ) { mCbMouseUp.unregisterCb( cbId ); }
+
     void unregisterTouchBegan( ci::CallbackId cbId ) { mCbTouchBegan.unregisterCb( cbId ); }
     void unregisterTouchMoved( ci::CallbackId cbId ) { mCbTouchMoved.unregisterCb( cbId ); }
     void unregisterTouchEnded( ci::CallbackId cbId ) { mCbTouchEnded.unregisterCb( cbId ); }
@@ -248,6 +289,9 @@ public:
 	virtual void dispatchStateEvent( const std::string& event );
     
     // bubbles events up to parents...
+	void dispatchMouseDown( XSceneEventRef eventRef );
+	void dispatchMouseDrag( XSceneEventRef eventRef );
+	void dispatchMouseUp( XSceneEventRef eventRef );
     void dispatchTouchBegan( XSceneEventRef eventRef );
     void dispatchTouchMoved( XSceneEventRef eventRef );
     void dispatchTouchEnded( XSceneEventRef eventRef );
@@ -265,6 +309,7 @@ protected:
     // and this is really all we have, everything else is recursion
     std::string mId;
     bool mVisible;    
+	bool mMouseDownInside;
 
 	ci::Matrix44f mTransform;
 
@@ -288,6 +333,9 @@ protected:
 	ci::CallbackMgr<bool(XSceneEventRef)> mCbTouchBegan;
 	ci::CallbackMgr<bool(XSceneEventRef)> mCbTouchMoved;
 	ci::CallbackMgr<bool(XSceneEventRef)> mCbTouchEnded;
+	ci::CallbackMgr<bool(XSceneEventRef)> mCbMouseDown;
+	ci::CallbackMgr<bool(XSceneEventRef)> mCbMouseDrag;
+	ci::CallbackMgr<bool(XSceneEventRef)> mCbMouseUp;
 
 	std::map<std::string, XNodeState> mStates;
 };

@@ -28,7 +28,29 @@ void XRect::draw(float opacity)
     // and then any children will be draw after this
 }
 
-bool XRect::touchBegan( ci::app::TouchEvent::Touch touch )
+bool XRect::mouseDownInternal( ci::app::MouseEvent event )
+{
+	bool hit = hitTest( event.getPos() );
+	if (hit && mScript)
+		mScript->call("mouseDown", event.getPos().x, event.getPos().y);
+    return hit;
+}
+
+bool XRect::mouseDragInternal( ci::app::MouseEvent event )
+{
+	if (mScript)
+		mScript->call("mouseDrag", event.getPos().x, event.getPos().y);
+	return true;
+}
+
+bool XRect::mouseUpInternal( ci::app::MouseEvent event )
+{
+	if (mScript)
+		mScript->call("mouseUp", event.getPos().x, event.getPos().y);
+    return true;
+}
+
+bool XRect::touchBeganInternal( ci::app::TouchEvent::Touch touch )
 {
 	bool hit = hitTest( touch.getPos() );
 	if (hit && mScript)
@@ -36,14 +58,14 @@ bool XRect::touchBegan( ci::app::TouchEvent::Touch touch )
     return hit;
 }
 
-bool XRect::touchMoved( ci::app::TouchEvent::Touch touch )
+bool XRect::touchMovedInternal( ci::app::TouchEvent::Touch touch )
 {
 	if (mScript)
 		mScript->call("touchMoved", touch.getPos().x, touch.getPos().y);
 	return true;
 }
 
-bool XRect::touchEnded( ci::app::TouchEvent::Touch touch )
+bool XRect::touchEndedInternal( ci::app::TouchEvent::Touch touch )
 {
 	if (mScript)
 		mScript->call("touchEnded", touch.getPos().x, touch.getPos().y);

@@ -16,12 +16,16 @@ public:
 	virtual XNode::NodeType getType() { return XNode::NodeTypeRect; }
 
     void draw(float opacity = 1.0f);
+
+	bool mouseDownInternal( ci::app::MouseEvent event );
+	bool mouseDragInternal( ci::app::MouseEvent event );
+	bool mouseUpInternal( ci::app::MouseEvent event );
     
     // touchEnded will only be called for touch IDs that returned true in touchBegan
     // so we need to implement both methods (there's also touchMoved which works the same way)
-    bool touchBegan( ci::app::TouchEvent::Touch touch );
-	bool touchMoved( ci::app::TouchEvent::Touch touch );
-    bool touchEnded( ci::app::TouchEvent::Touch touch );
+    bool touchBeganInternal( ci::app::TouchEvent::Touch touch );
+	bool touchMovedInternal( ci::app::TouchEvent::Touch touch );
+    bool touchEndedInternal( ci::app::TouchEvent::Touch touch );
 
 	void loadXml( ci::XmlTree &xml );
 

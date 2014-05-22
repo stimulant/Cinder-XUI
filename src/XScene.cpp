@@ -30,6 +30,21 @@ XScene::~XScene()
 {
 }
 
+bool XScene::mouseDown( ci::app::MouseEvent event )
+{
+	return deepMouseDown( event ); // recurses to children
+}
+
+bool XScene::mouseUp( ci::app::MouseEvent event )
+{
+	return deepMouseUp( event ); // recurses to children
+}
+
+bool XScene::mouseDrag( ci::app::MouseEvent event )
+{
+	return deepMouseDrag( event ); // recurses to children
+}
+
 bool XScene::touchesBegan( TouchEvent event )
 {
     bool consumed = true;
