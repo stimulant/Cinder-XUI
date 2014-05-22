@@ -1,0 +1,72 @@
+<Scene>
+	<Rect id="window" x="200" y="200" width="240" height="200" color="0xff0000ff" rotate="10" opacity="1.0">
+		<![CDATA[
+
+		touched = false
+		sX, sY = 0, 0
+		lastX, lastY = 0, 0
+		velX, velY = 0, 0
+
+		function update(elapsed)
+			if not touched then
+				this.x, this.y = this.x + velX, this.y + velY
+
+				if this.x > 640 - this.width then velX = -1 * velX end
+				if this.x < 0 then velX = -1 * velX end
+				if this.y > 480 - this.height then velY = -1 * velY end
+				if this.y < 0 then velY = -1 * velY end
+			end
+		end
+
+		function touchBegan(x, y)
+			print("touchBegan")
+			text.text = "Touch Down"
+			touched = true
+			this.color = Color(1, 0, 1, 1)
+
+			sX = x - this.x
+			sY = y - this.y
+		end
+
+		function touchMoved(x, y)
+			print("touchMoved")
+			text.text = "Touch Moved"
+
+			this.x, this.y = x - sX, y - sY
+			velX, velY = this.x - lastX, this.y - lastY
+			lastX, lastY = this.x, this.y
+		end
+
+		function touchEnded(x, y)
+			print("touchEnded")
+			text.text = "Touch Ended"
+			touched = false
+			this.color = Color(0, 0, 1, 1)
+
+			sX, sY = 0, 0
+		end
+
+		]]>
+
+
+		<Text x="20" id="text" text="blah di blah" size="32" font="Futura Medium.ttf"/>
+		<Rect x="60" y="50" width="120" height="120" opacity="1" color="0xaf002f2f">
+			<Image id="n" texture="btn1_default.png"/>
+			<Image id="p" texture="btn1_pressed.png" opacity="0"/>
+			<!-- <State id="pressed" event="btn1_pressed">
+				<Property target="p" type="opacity" value="1" time="1.0" ease="InOutQuad"/>
+				<Property target="n" type="opacity" value="0" time="1.0" ease="InOutQuad"/>
+			</State>
+			<State id="released" event="btn1_released">
+				<Property target="p" type="opacity" value="0" time="1.0" ease="InOutQuad"/>
+				<Property target="n" type="opacity" value="1" time="1.0" ease="InOutQuad"/>
+			</State> -->
+		</Rect>
+		<!-- <State id="pressed">
+			<Property type="width" value="400" time="1.0" ease="InOutBounce"/>
+		</State>
+		<State id="released">
+			<Property type="width" value="240" time="1.0" ease="InOutBounce"/>
+		</State> -->
+	</Rect>
+</Scene>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cinder>
+<block
+	name="XUI"
+	id="XUI"
+	author="Stimulant"
+	license=""
+	summary="XML UI System."
+	url="https://github.com/stimulant/Cinder/blocks/XUI"
+	git="git://github.com/stimulant/Cinder.git"
+	>
+	<supports os="msw" />
+
+	<copyExclude>samples</copyExclude>
+	<includePath>include</includePath>
+	<headerPattern>include/*.h</headerPattern>
+	<sourcePattern>include/*.cpp</sourcePattern>
+</block>
+</cinder>
