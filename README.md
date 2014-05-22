@@ -9,8 +9,8 @@ XML based UI System for Cinder
 * Basic controls (Rect, Text, Image).
 * State/Event system with inheritance for states.
 * Touch handling.
-* Import of SVG from Adobe Illustrator
-* Lua Scripting
+* Import of [SVG](http://en.wikipedia.org/wiki/Scalable_Vector_Graphics) from Adobe Illustrator
+* [Lua](http://www.lua.org/) Scripting
 
 #####Block Depedencies
 Currently no dependencies
@@ -106,7 +106,7 @@ Nodes states can also inherit from each other:
 ```
 
 #####SVG
-It is possible to copy SVG into XUI files.  The SVG element behaves like a XUI node (and respects positioning as well as inherited opacity).  With the latest Adobe Creative Cloud it is even possible to copy paste SVG directly from inside illustrator:
+It is possible to copy [SVG](http://en.wikipedia.org/wiki/Scalable_Vector_Graphics) into XUI files.  The SVG element behaves like a XUI node (and respects positioning as well as inherited opacity).  With the latest Adobe Creative Cloud it is even possible to copy paste SVG directly from inside illustrator:
 
 ```c
 <Scene>
@@ -137,7 +137,7 @@ It is possible to copy SVG into XUI files.  The SVG element behaves like a XUI n
 ```
 
 #####LUA Scripting
-Scripting for XUI is provided via Lua.  Since lua is not valid XML it must be inserted into the XUI file as CDATA.  Lua scripts are scoped to the node that they are inserted in ("this" refers to the scoped node and all other nodes can be referenced by id).  Most properties of nodes can be referenced from lua (off of "this" or the id) and there are a number of lua functions that are called implicitly (update, mouseDown, mouseUp, mouseDrag, touchBegan, touchEnded, touchMoved).
+Scripting for XUI is provided via [Lua](http://www.lua.org/).  Since lua is not valid XML it must be inserted into the XUI file as CDATA.  Lua scripts are scoped to the node that they are inserted in ("this" refers to the scoped node and all other nodes can be referenced by id).  Most properties of nodes can be referenced from lua (off of "this" or the id) and there are a number of lua functions that are called implicitly (update, mouseDown, mouseUp, mouseDrag, touchBegan, touchEnded, touchMoved).
 
 ```c
 <Scene>
