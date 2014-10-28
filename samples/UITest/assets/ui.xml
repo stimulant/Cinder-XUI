@@ -49,7 +49,7 @@
 		]]>
 
 
-		<Text x="20" id="text" text="blah di blah" size="32" font="Futura Medium.ttf"/>
+		<Text x="20" id="text" text="blah di blah" size="32"/>
 		<Rect x="60" y="50" width="120" height="120" opacity="1" color="0xaf002f2f">
 			<Image id="n" texture="btn1_default.png"/>
 			<Image id="p" texture="btn1_pressed.png" opacity="0"/>
