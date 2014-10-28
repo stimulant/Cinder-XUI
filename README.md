@@ -171,3 +171,10 @@ Scripting for XUI is provided via [Lua](http://www.lua.org/).  Since lua is not 
     </Rect>
 </Scene>
 ```
+
+#####Credits
+Developed at [Stimulant](http://stimulant.com).
+Inspired by Simon Geilfus's [AssetManager](https://github.com/simongeilfus/Cinder-AssetManager) and Paul Houx's [SimpleSceneGraph](https://github.com/paulhoux/Cinder-Samples/tree/master/SimpleSceneGraph) blocks among others.
+
+#####License
+Cinder-XUI is licensed under the MIT License, see LICENSE for more information.
