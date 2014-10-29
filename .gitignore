@@ -1,4 +1,5 @@
 samples/UITest/vc11/Debug/
+samples/UITest/vc12/Debug/
 *.opensdf
 *.sdf
 *.suo
