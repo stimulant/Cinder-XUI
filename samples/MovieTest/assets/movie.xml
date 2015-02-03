@@ -1,0 +1,66 @@
+<Scene>
+	<Rect id="window" x="0" y="0" width="800" height="600" color="0xffff00ff" opacity="1.0">
+		<Movie path="movie.mov" width="800" height="600">
+			<![CDATA[
+			lineX, lineY = 0, 0
+			time = 0.0
+			test = 0.0
+
+			prog = GlslProg([[
+				void main()
+				{
+					gl_TexCoord[0] = gl_MultiTexCoord0;
+				    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+				}
+				]], 
+
+				[[
+				uniform sampler2DRect color_texture;
+				uniform float y1;
+				uniform float y2;
+
+				//v1 = {x2-x1, y2-y1}   # Vector 1
+				//v2 = {x2-xA, y2-yA}   # Vector 1
+				//xp = v1.x*v2.y - v1.y*v2.x  # Cross product
+
+				void main()
+				{
+					
+					float x1 = 0;
+					float x2 = 800;
+					vec2 v1 = vec2(x2-x1, y2*600 - y1*600);
+					vec2 v2 = vec2(x2-gl_TexCoord[0].s, y2*600 - gl_TexCoord[0].t);
+					float xp = v1.x*v2.y - v1.y*v2.x;
+					if (xp < 0)
+				    	gl_FragColor = texture2DRect( color_texture, gl_TexCoord[0].st );
+				    else
+				    	gl_FragColor = vec4(0,0,0,1);
+				}
+				]])
+
+			function update(elapsed)
+				time = time + elapsed
+				test = math.sin(time)
+				--print("update")
+			end
+
+			function startDraw()
+				prog:bind()
+				uniform_int(prog, "color_texture", 0)
+				uniform_float(prog, "y1", math.abs(test))
+				uniform_float(prog, "y2", 1.0 - math.abs(test))
+				--print("startDraw")
+			end
+
+			function endDraw()
+				GlslProg:unbind()
+				--print("endDraw")
+			end
+
+			function mouseDown(x, y)
+				print("touchBegan")
+			end
+			]]>
+		</Movie>
+	</Rect>
+</Scene>

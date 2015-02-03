@@ -117,6 +117,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\XAssetManager.cpp" />
     <ClCompile Include="..\..\..\src\XImage.cpp" />
+    <ClCompile Include="..\..\..\src\XMovie.cpp" />
     <ClCompile Include="..\..\..\src\XNode.cpp" />
     <ClCompile Include="..\..\..\src\XRect.cpp" />
     <ClCompile Include="..\..\..\src\XScene.cpp" />
@@ -128,6 +129,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\include\XAssetManager.h" />
     <ClInclude Include="..\..\..\include\XImage.h" />
+    <ClInclude Include="..\..\..\include\XMovie.h" />
     <ClInclude Include="..\..\..\include\XNode.h" />
     <ClInclude Include="..\..\..\include\XRect.h" />
     <ClInclude Include="..\..\..\include\XScene.h" />

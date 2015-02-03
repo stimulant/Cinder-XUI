@@ -48,6 +48,9 @@
     <ClInclude Include="..\..\..\include\XSVG.h">
       <Filter>XUI</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\XMovie.h">
+      <Filter>XUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -82,6 +85,9 @@
       <Filter>XUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\XSVG.cpp">
+      <Filter>XUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XMovie.cpp">
       <Filter>XUI</Filter>
     </ClCompile>
   </ItemGroup>

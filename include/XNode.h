@@ -109,7 +109,7 @@ protected:
     
 public:
 
-	typedef	enum { NodeTypeNode, NodeTypeRect, NodeTypeText, NodeTypeImage, NodeTypeSVG } NodeType;
+	typedef	enum { NodeTypeNode, NodeTypeRect, NodeTypeText, NodeTypeImage, NodeTypeMovie, NodeTypeSVG } NodeType;
 	virtual XNode::NodeType getType() { return NodeTypeNode; }
 
     static XNodeRef create();

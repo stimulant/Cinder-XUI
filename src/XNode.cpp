@@ -11,6 +11,7 @@
 // node types
 #include "XRect.h"
 #include "XImage.h"
+#include "XMovie.h"
 #include "XText.h"
 #include "XSVG.h"
 
@@ -163,6 +164,8 @@ void XNode::loadXml(ci::XmlTree &xml)
 				addChild(XRect::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Image"))
 				addChild(XImage::create(*xmlChild));
+			else if (boost::iequals(xmlChild->getTag(), "Movie"))
+				addChild(XMovie::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Svg"))
 				addChild(XSVG::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Text"))
@@ -326,8 +329,16 @@ void XNode::deepDraw(float opacity)
 
 		gl::enableAlphaBlending();
 
+		// setup drawing from lua
+		if (mScript)
+			mScript->call( "startDraw" );
+
         // draw self    
         draw(opacity);
+        
+		// finish drawing from lua
+		if (mScript)
+			mScript->call( "endDraw" );
         
         // draw children
         for(XNodeRef &child : mChildren) {        

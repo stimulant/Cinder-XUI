@@ -5,7 +5,10 @@
 #include "XRect.h"
 #include "XText.h"
 #include "XImage.h"
+#include "XMovie.h"
 #include "XSVG.h"
+
+#include "cinder/gl/gl.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -48,6 +51,15 @@ void lua_print(std::string msg)
 	app::console() << "LUA: " << msg << endl;
 }
     
+void lua_uniform_float(ci::gl::GlslProg* prog, const char* name, float value) 
+{
+	prog->uniform(name, value);
+}
+void lua_uniform_int(ci::gl::GlslProg* prog, const char* name, int value) 
+{
+	prog->uniform(name, value);
+}
+    
 XScript::XScript()
 {
 	mStopOnErrors	= true;
@@ -67,6 +79,13 @@ void XScript::bindNode(XNode* node)
 {
 	luabridge::getGlobalNamespace(mState)
 		.addFunction("print", lua_print)
+		.addFunction("uniform_float", lua_uniform_float)
+		.addFunction("uniform_int", lua_uniform_int)
+		.beginClass<ci::gl::GlslProg>("GlslProg")
+			.addConstructor <void (*) (const char *vertexShader, const char *fragmentShader)> ()
+			.addFunction ("bind", &ci::gl::GlslProg::bind)
+			.addStaticFunction ("unbind", &ci::gl::GlslProg::unbind)
+		.endClass()
 		.beginClass<ci::ColorA>("Color")
 			.addConstructor <void (*) (float, float, float)> ()
 			.addConstructor <void (*) (float, float, float, float)> ()
