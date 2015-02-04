@@ -6,11 +6,13 @@ XML based UI System for Cinder
 #####Features:
 * Scene graph system for nodes.
 * Dynamic reloading of changed xml assets.
-* Basic controls (Rect, Text, Image).
+* Basic controls (Rect, Text, Image, Movie).
 * State/Event system with inheritance for states.
 * Touch handling.
 * Import of [SVG](http://en.wikipedia.org/wiki/Scalable_Vector_Graphics) from Adobe Illustrator
 * [Lua](http://www.lua.org/) Scripting
+* Support for quicktime video playback.
+* GLSL shader support.
 
 #####Block Depedencies
 Currently no dependencies
@@ -52,13 +54,14 @@ In the xml file for a scene you can define a Rect with properties for size, colo
 <Scene>
 ```
 
-You can also define Text and Images (and these can be children of rects and are positioned appropriately):
+You can also define Text, Images and Movies (and these can be children of rects and are positioned appropriately):
 
 ```c
 <Scene>
     <Rect id="window" x="20" y="20" width="240" height="200" color="0xff00ffff" opacity="0.2">
         <Text x="20" text="blah di blah" size="32" font="Futura Medium.ttf"/>
         <Image id="n" texture="btn1_default.png"/>
+        <Movie width="240" height="200" id="movie" path="video.mov"/>
     </Rect>
 </Scene>
 ```
@@ -137,7 +140,7 @@ It is possible to copy [SVG](http://en.wikipedia.org/wiki/Scalable_Vector_Graphi
 ```
 
 #####LUA Scripting
-Scripting for XUI is provided via [Lua](http://www.lua.org/).  Since lua is not valid XML it must be inserted into the XUI file as CDATA.  Lua scripts are scoped to the node that they are inserted in ("this" refers to the scoped node and all other nodes can be referenced by id).  Most properties of nodes can be referenced from lua (off of "this" or the id) and there are a number of lua functions that are called implicitly (update, mouseDown, mouseUp, mouseDrag, touchBegan, touchEnded, touchMoved).
+Scripting for XUI is provided via [Lua](http://www.lua.org/).  Since Lua is not valid XML it must be inserted into the XUI file as CDATA.  Lua scripts are scoped to the node that they are inserted in ("this" refers to the scoped node and all other nodes can be referenced by id).  Most properties of nodes can be referenced from Lua (off of "this" or the id) and there are a number of Lua functions that are called implicitly (update, mouseDown, mouseUp, mouseDrag, touchBegan, touchEnded, touchMoved).
 
 ```c
 <Scene>
@@ -168,6 +171,47 @@ Scripting for XUI is provided via [Lua](http://www.lua.org/).  Since lua is not 
         ]]>
 
         <Text x="20" id="text" text="" size="32" font="Futura Medium.ttf"/>
+    </Rect>
+</Scene>
+```
+
+#####GLSL Shaders
+It is possible to apply both GLSL vertex and fragment shaders to individual XUI nodes via Lua scripts.  Shaders can be created when Lua is initialized from strings and setup/shutdown in the startDraw and endDraw Lua scripts.
+
+```c
+<Scene>
+    <Rect id="window" x="200" y="200" width="240" height="200" color="0xff0000ff" rotate="10" opacity="1.0">
+        <![CDATA[
+            time = 0.0
+
+            prog = GlslProg([[
+                uniform float time;
+                void main()
+                {
+                    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+                }
+                ]], 
+
+                [[
+                void main()
+                {
+                    gl_FragColor = vec4(sin(time),0,0,1);
+                }
+                ]])
+
+            function update(elapsed)
+                time = time + elapsed
+            end
+
+            function startDraw()
+                prog:bind()
+                uniform_float(prog, "time", time)
+            end
+
+            function endDraw()
+                GlslProg:unbind()
+            end
+            ]]>
     </Rect>
 </Scene>
 ```
