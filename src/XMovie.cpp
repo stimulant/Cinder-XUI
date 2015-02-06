@@ -44,8 +44,8 @@ void XMovie::loadXml( ci::XmlTree &xml )
 	if ( xml.hasAttribute( "path" ) )
 	{
 		mMovie = qtime::MovieGl::create( app::getAssetPath( xml.getAttributeValue<std::string>( "path" ) ) );
-		mMovie->setLoop();
-		mMovie->play();
+		//mMovie->setLoop();
+		//mMovie->play();
 	}
 
 	XRect::loadXml( xml );

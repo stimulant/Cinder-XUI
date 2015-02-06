@@ -147,6 +147,9 @@ void XNode::loadXml(ci::XmlTree &xml)
 	float rotation = xml.getAttributeValue( "rotation", 0.0f );
 	setRotation( rotation );
 
+	std::string maskType = xml.getAttributeValue<std::string>( "mask", "none" );
+	setMask(maskType);
+
 	// load children
 	std::string luaCode = "";
 	for ( auto &xmlChild : xml.getChildren() ) 
@@ -266,8 +269,13 @@ void XNode::removeChildren()
 XNodeRef XNode::getChildById( const std::string &childId ) const
 {
     for (std::vector<XNodeRef>::const_iterator i = mChildren.begin(); i != mChildren.end(); ++i) {
-        if ( (*i)->getId() == childId ) {
+        if ( (*i)->getId() == childId )
             return *i;
+		else
+		{
+			XNodeRef foundChild = (*i)->getChildById( childId );
+			if (foundChild)
+				return foundChild;
         }
     }
     return XNodeRef(); // aka NULL
@@ -290,11 +298,6 @@ void XNode::setProperty( const XNodeStateProperty& prop )
 		app::timeline().apply( &mY, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn );
 	else if (prop.mType == "opacity")
 		app::timeline().apply( &mOpacity, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn );
-}
-
-void XNode::test()
-{
-	app::console() << "test" << std::endl;
 }
 
 void XNode::deepUpdate( double elapsedSeconds )
@@ -329,6 +332,43 @@ void XNode::deepDraw(float opacity)
 
 		gl::enableAlphaBlending();
 
+		// masking via stencil buffer
+		// not this only works if you turn on the stencil buffer in Cinder
+		switch (mMaskType)
+		{
+			case MaskNone:
+				glDisable( GL_STENCIL_TEST );
+				glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE ); glDepthMask(GL_TRUE);
+				break;
+			case MaskClear:
+				glEnable( GL_STENCIL_TEST );
+				glClear( GL_STENCIL_BUFFER_BIT );
+				break;
+			case MaskWrite:
+				glEnable( GL_STENCIL_TEST );
+				glStencilMask(0x1);
+				glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+				glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+				glDepthMask(GL_FALSE);
+				break;
+			case MaskNotEqual:
+				glEnable( GL_STENCIL_TEST );
+				glStencilMask(0x1);
+				glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+				glDepthMask(GL_TRUE);
+				break;
+			case MaskEqual:
+				glEnable( GL_STENCIL_TEST );
+				glStencilFunc(GL_EQUAL, 0x1, 0x1);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+				glDepthMask(GL_TRUE);
+				break;
+		}
+
 		// setup drawing from lua
 		if (mScript)
 			mScript->call( "startDraw" );
@@ -347,6 +387,10 @@ void XNode::deepDraw(float opacity)
 
 		gl::color( ColorA::white() );
 		gl::popModelView();
+
+		// turn off stenciling
+		glDisable( GL_STENCIL_TEST );
+		glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE ); glDepthMask(GL_TRUE);
     }     
 }
 
@@ -361,6 +405,35 @@ Matrix44f XNode::getConcatenatedTransform() const
         return parent->getConcatenatedTransform() * transform;
     }
     return transform;
+}
+
+void XNode::setMask( std::string maskType )
+{
+	if (maskType == "none")
+		mMaskType = MaskNone;
+	if (maskType == "clear")
+		mMaskType = MaskClear;
+	if (maskType == "write")
+		mMaskType = MaskWrite;
+	if (maskType == "notequal")
+		mMaskType = MaskNotEqual;
+	if (maskType == "equal")
+		mMaskType = MaskEqual;
+}
+
+std::string XNode::getMask() const
+{
+	if (mMaskType == MaskNone)
+		return "none";
+	if (mMaskType == MaskClear)
+		return "clear";
+	if (mMaskType == MaskWrite)
+		return "write";
+	if (mMaskType == MaskNotEqual)
+		return "notequal";
+	if (mMaskType == MaskEqual)
+		return "equal";
+	return "";
 }
 
 Vec2f XNode::localToGlobal( const Vec2f &pos )
@@ -402,7 +475,7 @@ bool XNode::deepMouseDown( ci::app::MouseEvent event )
             XNodeRef thisRef = shared_from_this();
             dispatchMouseDown( XSceneEventRef( new XSceneEvent( thisRef, thisRef, event ) ) );
 			mMouseDownInside = true;
-            consumed = true;
+            //consumed = true;
         }
     }
     return consumed;

@@ -55,6 +55,10 @@ void lua_uniform_float(ci::gl::GlslProg* prog, const char* name, float value)
 {
 	prog->uniform(name, value);
 }
+void lua_uniform_bool(ci::gl::GlslProg* prog, const char* name, bool value) 
+{
+	prog->uniform(name, value);
+}
 void lua_uniform_int(ci::gl::GlslProg* prog, const char* name, int value) 
 {
 	prog->uniform(name, value);
@@ -80,6 +84,7 @@ void XScript::bindNode(XNode* node)
 	luabridge::getGlobalNamespace(mState)
 		.addFunction("print", lua_print)
 		.addFunction("uniform_float", lua_uniform_float)
+		.addFunction("uniform_bool", lua_uniform_bool)
 		.addFunction("uniform_int", lua_uniform_int)
 		.beginClass<ci::gl::GlslProg>("GlslProg")
 			.addConstructor <void (*) (const char *vertexShader, const char *fragmentShader)> ()
@@ -101,6 +106,8 @@ void XScript::bindNode(XNode* node)
 			.addProperty("height", &XNode::getHeight, &XNode::setHeight)
 			.addProperty("color", &XNode::getColor, &XNode::setColor)
 			.addProperty("text", &XNode::getText, &XNode::setText)
+			.addProperty("mask", &XNode::getMask, &XNode::setMask)
+			.addFunction("call", &XNode::luaCall)
         .endClass()
 		.deriveClass <XRect, XNode> ("XRect")
 			//.addProperty("color", &XRect::getColor, &XRect::setColor)
