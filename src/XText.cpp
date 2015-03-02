@@ -1,3 +1,4 @@
+#include <boost/algorithm/string.hpp>
 #include "cinder/app/App.h"
 #include "XText.h"
 
@@ -41,6 +42,7 @@ void XText::loadXml( ci::XmlTree &xml )
 	else
 		mTextBox.setFont( Font( app::loadAsset( font ), (float)xml.getAttributeValue( "size", 12 ) ) );
 	setText( xml.getAttributeValue<std::string>( "text", "" ) );
+	setTextAlignment( xml.getAttributeValue<std::string>( "alignment", "left" ) );
 
 	XRect::loadXml( xml );
 }
@@ -49,6 +51,22 @@ void XText::setProperty( const XNodeStateProperty& prop )
 {
 	if (prop.mType == "text")
 		setText( prop.mValue.c_str() );
+	else if (prop.mType == "alignment")
+		setTextAlignment( prop.mValue.c_str() );
 	else
 		XRect::setProperty( prop );
+}
+
+void XText::setTextAlignment(std::string alignmentName)
+{
+	TextBox::Alignment alignment = TextBox::Alignment::LEFT;
+
+	if (boost::iequals(alignmentName, "left"))
+		alignment = TextBox::Alignment::LEFT;
+	if (boost::iequals(alignmentName, "center"))
+		alignment = TextBox::Alignment::CENTER;
+	if (boost::iequals(alignmentName, "right"))
+		alignment = TextBox::Alignment::RIGHT;
+
+	mTextBox.setAlignment(alignment);
 }

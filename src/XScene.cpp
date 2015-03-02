@@ -15,6 +15,7 @@ XSceneRef XScene::create()
 
 XSceneRef XScene::create(std::string xmlAsset)
 {
+	app::console() << "Loading XUI Scene: " << xmlAsset << std::endl;
 	XSceneRef ref = XSceneRef( new XScene() );
 	ref->loadXmlAsset(xmlAsset);
 	return ref;

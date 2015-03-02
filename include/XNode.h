@@ -16,6 +16,8 @@
 #include "cinder/Color.h"
 #include "cinder/Timeline.h"
 
+#include "XScript.h"
+
 namespace xui {
 
 class XState; // for state
@@ -110,6 +112,7 @@ protected:
 public:
 
 	typedef	enum { NodeTypeNode, NodeTypeRect, NodeTypeText, NodeTypeImage, NodeTypeMovie, NodeTypeSVG } NodeType;
+	typedef enum MaskType { MaskNone, MaskClear, MaskWrite, MaskNotEqual, MaskEqual };
 	virtual XNode::NodeType getType() { return NodeTypeNode; }
 
     static XNodeRef create();
@@ -175,6 +178,11 @@ public:
 	virtual void setColor( const ci::ColorA &color )	{ }
 	virtual std::string getText() const					{ return ""; }
 	virtual void setText( const std::string& text )		{ }
+	virtual int getTextWidth() const			{ return 0; }
+	virtual int getTextHeight() const			{ return 0; }
+
+	virtual void setMask( std::string maskType );
+	virtual std::string getMask() const;
     
     // override getConcatenatedTransform to change the behavior of these:
     ci::Vec2f localToGlobal( const ci::Vec2f &pos );
@@ -296,6 +304,35 @@ public:
     void dispatchTouchMoved( XSceneEventRef eventRef );
     void dispatchTouchEnded( XSceneEventRef eventRef );
     
+// LUA
+	void luaCall( const std::string& function )
+	{
+		if (mScript)
+			mScript->call( function );
+	}
+	template<typename T> T luaCall( const std::string& function )
+	{
+		T result;
+		if (mScript)
+			result = mScript->call<T>( function );
+		return result;
+	}
+	template<typename Arg> void luaCall( const std::string& function, const Arg& arg )
+	{
+		if (mScript)
+			mScript->call( function, arg );
+	}
+	template<typename Arg1, typename Arg2> void luaCall( const std::string& function, const Arg1& arg1, const Arg2& arg2 )
+	{
+		if (mScript)
+			mScript->call( function, arg1, arg2 );
+	}
+	template<typename Arg1, typename Arg2, typename Arg3> void luaCall( const std::string& function, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3 )
+	{
+		if (mScript)
+			mScript->call( function, arg1, arg2, arg3 );
+	}
+    
 protected:
     
     // weakrefs because we don't "own" these, they're just convenient
@@ -319,6 +356,9 @@ protected:
 	ci::Anim<float> mOpacity;
 	ci::Vec2f mScale;
 	float mRotation;
+
+	// masking
+	MaskType mMaskType;
 
     // normal shared_ptrs because we "own" children
     std::vector<XNodeRef> mChildren;

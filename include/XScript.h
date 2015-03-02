@@ -34,7 +34,7 @@ public:
 		T result;
             
 		if( !functionExists( function ) || ( mStopOnErrors && mErrors ) )
-			return;     
+			return result;
 		try
 		{
 			luabridge::LuaRef functionRef = luabridge::getGlobal(mState, function.c_str());
@@ -114,6 +114,43 @@ public:
 		{
 			luabridge::LuaRef functionRef = luabridge::getGlobal(mState, function.c_str());
 			functionRef(arg1, arg2);
+			mErrors = false;
+		}
+		catch (luabridge::LuaException const& e) 
+		{
+			mErrors = true;
+			mLastErrorString = e.what();
+			ci::app::console() << "Lua Error trying to call " << function << " : " << std::endl << e.what() << std::endl;
+		}
+	}
+	template<typename T, typename Arg1, typename Arg2, typename Arg3> T call( const std::string& function, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3 )
+	{
+		T result;
+            
+		if( !functionExists( function ) || ( mStopOnErrors && mErrors ) )
+			return;     
+		try
+		{
+			luabridge::LuaRef functionRef = luabridge::getGlobal(mState, function.c_str());
+			result = functionRef(arg1, arg2, arg3);
+			mErrors = false;
+		}
+		catch (luabridge::LuaException const& e) 
+		{
+			mErrors = true;
+			mLastErrorString = e.what();
+			ci::app::console() << "Lua Error trying to call " << function << " : " << std::endl << e.what() << std::endl;
+		}
+		return result;
+	}
+	template<typename Arg1, typename Arg2, typename Arg3> void call( const std::string& function, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3 )
+	{
+		if( !functionExists( function ) || ( mStopOnErrors && mErrors ) )
+			return;
+		try
+		{
+			luabridge::LuaRef functionRef = luabridge::getGlobal(mState, function.c_str());
+			functionRef(arg1, arg2, arg3);
 			mErrors = false;
 		}
 		catch (luabridge::LuaException const& e) 

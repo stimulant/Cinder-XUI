@@ -22,6 +22,9 @@ public:
 	void loadXml( ci::XmlTree &xml );
 	virtual std::string getText() const { return mTextBox.getText(); }
 	virtual void setText( const std::string& text ) { mTextBox.setText( text ); }
+	virtual int getTextWidth() const { return (int)mTextBox.measure().x; }
+	virtual int getTextHeight() const { return (int)mTextBox.measure().y; }
+	virtual void setTextAlignment(std::string alignmentName);
 
 	void setProperty( const XNodeStateProperty& prop );
     

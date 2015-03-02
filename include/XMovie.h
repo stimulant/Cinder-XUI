@@ -22,6 +22,11 @@ public:
 
 	void loadXml( ci::XmlTree &xml );
     
+	void setLoop() { mMovie->setLoop(); }
+	void seekToStart() { mMovie->seekToStart(); }
+	void stop() { mMovie->stop(); }
+	void play() { mMovie->play(); }
+    
 protected:
 	XMovie() {}
     

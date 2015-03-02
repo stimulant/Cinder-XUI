@@ -65,8 +65,8 @@
       <AdditionalIncludeDirectories>"..\..\..\..\..\\include";..\include</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>cinder-$(PlatformToolset)_d.lib;lua.lib;%(AdditionalDependencies);</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\..\..\\lib\msw\$(PlatformTarget)";..\..\..\lib\msw</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cinder_d.lib;lua.lib;%(AdditionalDependencies);..\..\..\..\..\blocks\QuickTime\lib\msw\CVClient.lib;..\..\..\..\..\blocks\QuickTime\lib\msw\QTMLClient.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>"..\..\..\..\..\\lib";"..\..\..\..\..\\lib\msw";"..\..\..\lib\msw"</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -95,8 +95,8 @@
       <AdditionalIncludeDirectories>"..\..\..\..\..\\include";..\include</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>cinder-$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\..\..\\lib\msw\$(PlatformTarget)";..\..\..\lib\msw</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cinder.lib;lua.lib;%(AdditionalDependencies);..\..\..\..\..\blocks\QuickTime\lib\msw\CVClient.lib;..\..\..\..\..\blocks\QuickTime\lib\msw\QTMLClient.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>"..\..\..\..\..\\lib";"..\..\..\..\..\\lib\msw";"..\..\..\lib\msw"</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
