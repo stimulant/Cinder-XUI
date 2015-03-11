@@ -20,10 +20,6 @@ XTextRef XText::create( ci::XmlTree &xml )
 
 void XText::draw(float opacity)
 {
-	// render our text surface
-	mTextBox.setSize( Vec2f( mWidth, mHeight ) );
-	mTextSurface = mTextBox.render();
-
     // Matrix is already applied so we can draw at origin
     gl::color( mColor * ColorA(1.0f, 1.0f, 1.0f, mOpacity * opacity) );
 
@@ -45,16 +41,22 @@ void XText::loadXml( ci::XmlTree &xml )
 	setTextAlignment( xml.getAttributeValue<std::string>( "alignment", "left" ) );
 
 	XRect::loadXml( xml );
+
+	update();
 }
 
 void XText::setProperty( const XNodeStateProperty& prop )
 {
 	if (prop.mType == "text")
 		setText( prop.mValue.c_str() );
+	else if (prop.mType == "textcolor")
+		mTextBox.setColor( hexToColor(prop.mValue.c_str()) );
 	else if (prop.mType == "alignment")
 		setTextAlignment( prop.mValue.c_str() );
 	else
 		XRect::setProperty( prop );
+
+	update();
 }
 
 void XText::setTextAlignment(std::string alignmentName)
@@ -69,4 +71,12 @@ void XText::setTextAlignment(std::string alignmentName)
 		alignment = TextBox::Alignment::RIGHT;
 
 	mTextBox.setAlignment(alignment);
+	update();
+}
+
+void XText::update()
+{
+	// render our text surface
+	mTextBox.setSize( Vec2f( mWidth, mHeight ) );
+	mTextSurface = mTextBox.render();
 }

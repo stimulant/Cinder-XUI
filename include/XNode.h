@@ -332,6 +332,11 @@ public:
 		if (mScript)
 			mScript->call( function, arg1, arg2, arg3 );
 	}
+	template<typename Arg1, typename Arg2, typename Arg3, typename Arg4> void luaCall( const std::string& function, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4 )
+	{
+		if (mScript)
+			mScript->call( function, arg1, arg2, arg3, arg4 );
+	}
     
 protected:
     
