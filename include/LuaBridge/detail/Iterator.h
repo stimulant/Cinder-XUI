@@ -47,8 +47,8 @@ private:
     }
     else
     {
-      m_key = Nil();
-      m_value = Nil();
+      m_key = LuaNil();
+      m_value = LuaNil();
     }
     lua_pop(m_L, 1);
   }
