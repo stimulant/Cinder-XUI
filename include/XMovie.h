@@ -3,7 +3,7 @@
 #include "cinder/Vector.h"
 #include "cinder/Color.h"
 #include "cinder/gl/Texture.h"
-#include "cinder/qtime/QuickTime.h"
+#include "cinder/qtime/QuickTimeGl.h"
 
 namespace xui {
 
@@ -22,15 +22,17 @@ public:
 
 	void loadXml( ci::XmlTree &xml );
     
-	void setLoop() { mMovie->setLoop(); }
-	void seekToStart() { mMovie->seekToStart(); }
-	void stop() { mMovie->stop(); }
-	void play() { mMovie->play(); }
+	virtual bool getLoop() const { return mIsLooping; }
+	virtual void setLoop(bool loop) { mIsLooping = loop; mMovie->setLoop(mIsLooping); }
+	virtual void seekToStart() { mMovie->seekToStart(); }
+	virtual void stop() { mMovie->stop(); }
+	virtual void play() { mMovie->play(); }
     
 protected:
-	XMovie() {}
+	XMovie() : mIsLooping(false) {}
     
-    ci::gl::Texture mFrameTexture;
+	bool mIsLooping;
+    ci::gl::TextureRef mFrameTexture;
 	ci::qtime::MovieGlRef mMovie;
 };
 

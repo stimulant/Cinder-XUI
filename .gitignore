@@ -1,7 +1,5 @@
-samples/UITest/vc11/Debug/
-samples/UITest/vc12/Debug/
-samples/MovieTest/vc11/Debug/
-samples/MovieTest/vc12/Debug/
+samples/UITest/vc2013/Debug/
+samples/UITest/vc2013/Debug/
 *.opensdf
 *.sdf
 *.suo

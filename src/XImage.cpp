@@ -1,4 +1,5 @@
 #include "cinder/app/App.h"
+#include "cinder/gl/gl.h"
 #include "cinder/ImageIO.h"
 #include "XImage.h"
 
@@ -29,11 +30,18 @@ void XImage::draw(float opacity)
 
 void XImage::loadXml( ci::XmlTree &xml )
 {
-	std::string texture;
+	XRect::loadXml(xml);
 
 	// get/set properties from xml
-	if ( xml.hasAttribute( "texture" ) )
-		mTexture = gl::Texture::create( loadImage( app::loadAsset( xml.getAttributeValue<std::string>( "texture" ) ) ) );
+	if (xml.hasAttribute("texture"))
+	{
+		mTexture = gl::Texture::create(loadImage(app::loadAsset(xml.getAttributeValue<std::string>("texture"))));
 
-	XRect::loadXml( xml );
+		// if width and height have not been set, default to default texture's size
+		if (mWidth == 0.0f && mHeight == 0.0f)
+		{
+			mWidth = (float)mTexture->getWidth();
+			mHeight = (float)mTexture->getHeight();
+		}
+	}
 }

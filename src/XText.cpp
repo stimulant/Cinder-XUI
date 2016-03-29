@@ -1,5 +1,6 @@
 #include <boost/algorithm/string.hpp>
 #include "cinder/app/App.h"
+#include "cinder/gl/gl.h"
 #include "XText.h"
 
 using namespace ci;
@@ -23,14 +24,16 @@ void XText::draw(float opacity)
     // Matrix is already applied so we can draw at origin
     gl::color( mColor * ColorA(1.0f, 1.0f, 1.0f, mOpacity * opacity) );
 
-    if ( mTextSurface ) 
-		gl::draw( mTextSurface );
+	if (mTextBox.getText() != "" && mTextTexture)
+		gl::draw(mTextTexture);
 
     // and then any children will be draw after this
 }
 
 void XText::loadXml( ci::XmlTree &xml )
 {
+	XRect::loadXml(xml);
+
 	// get/set properties from xml
 	std::string font = xml.getAttributeValue<std::string>( "font", "" );
 	if (font == "")
@@ -39,8 +42,6 @@ void XText::loadXml( ci::XmlTree &xml )
 		mTextBox.setFont( Font( app::loadAsset( font ), (float)xml.getAttributeValue( "size", 12 ) ) );
 	setText( xml.getAttributeValue<std::string>( "text", "" ) );
 	setTextAlignment( xml.getAttributeValue<std::string>( "alignment", "left" ) );
-
-	XRect::loadXml( xml );
 
 	update();
 }
@@ -77,6 +78,6 @@ void XText::setTextAlignment(std::string alignmentName)
 void XText::update()
 {
 	// render our text surface
-	mTextBox.setSize( Vec2f( mWidth, mHeight ) );
-	mTextSurface = mTextBox.render();
+	mTextBox.setSize( vec2( mWidth, mHeight ) );
+	mTextTexture = gl::Texture::create( mTextBox.render() );
 }

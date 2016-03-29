@@ -1,91 +1,62 @@
-#include "cinder/app/AppNative.h"
+#include "cinder/app/App.h"
 #include "cinder/gl/gl.h"
-#include "cinder/gl/GlslProg.h"
+#include "cinder/app/RendererGl.h"
 
-#include "XScene.h"
-#include "XRect.h"
+#include "XUI.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 using namespace xui;
 
-class UITestApp : public AppNative {
+class UITestApp : public App {
 public:
-	void	prepareSettings( Settings *settings );
 	void	setup();
-	void	update();
-	void	draw();
-
-	void	touchesBegan( ci::app::TouchEvent event );
-	void	touchesMoved( ci::app::TouchEvent event );
-	void	touchesEnded( ci::app::TouchEvent event );
-
-	void	mouseDown( ci::app::MouseEvent event );
-    void	mouseUp( ci::app::MouseEvent event );
-	void	mouseDrag( ci::app::MouseEvent event );
     
-	void onSceneEvent( std::string event );
-    XSceneRef mXSceneRef;
-};
+	void onSceneLoadTryEvent(XUI::SceneLoadEventResponse response);
+	void onSceneLoadSuccessEvent(XUI::SceneLoadEventResponse response);
+	void onSceneLoadFailureEvent(XUI::SceneLoadFailureEventResponse response);
+	void consoleOut(std::string msg);
 
-void UITestApp::prepareSettings( Settings *settings )
-{
-	settings->enableMultiTouch(true);
-}
+	// XUI
+	XUIRef mXUI;
+};
 
 void UITestApp::setup()
 {
+	// create XUI and hook up scene load events
+	mXUI = XUI::create();
+	mXUI->registerSceneLoadTryEvent(this, &UITestApp::onSceneLoadTryEvent);
+	mXUI->registerSceneLoadSuccessEvent(this, &UITestApp::onSceneLoadSuccessEvent);
+	mXUI->registerSceneLoadFailureEvent(this, &UITestApp::onSceneLoadFailureEvent);
+	mXUI->registerConsoleOut(this, &UITestApp::consoleOut);
+
 	// ui setup
-	mXSceneRef = XScene::create("ui.xml");
-	mXSceneRef->registerEvent( this, &UITestApp::onSceneEvent );
+	mXUI->loadScene("ui.xml");
 }
 
-void UITestApp::onSceneEvent( std::string event )
+void UITestApp::consoleOut(std::string msg)
 {
-	console() << event << endl;
+	app::console() << msg << std::endl;
 }
 
-void UITestApp::update()
+void UITestApp::onSceneLoadTryEvent(XUI::SceneLoadEventResponse response)
 {
-	mXSceneRef->deepUpdate(app::getElapsedSeconds());
+	app::console() << "Loading XUI Scene..." << std::endl;
 }
 
-void UITestApp::draw()
+void UITestApp::onSceneLoadSuccessEvent(XUI::SceneLoadEventResponse response)
 {
-	gl::clear( Color( 0, 0, 0 ) );
-
-	mXSceneRef->deepDraw();
+	app::console() << "XUI Load Success" << std::endl;
 }
 
-void UITestApp::mouseDown( ci::app::MouseEvent event )
+void UITestApp::onSceneLoadFailureEvent(XUI::SceneLoadFailureEventResponse response)
 {
-	mXSceneRef->mouseDown(event);
+	// output error and send it to code editor
+	app::console() << response.mError << std::endl;
 }
 
-void UITestApp::mouseUp( ci::app::MouseEvent event )
-{
-	mXSceneRef->mouseUp(event);
-}
-
-void UITestApp::mouseDrag( ci::app::MouseEvent event )
-{
-	mXSceneRef->mouseDrag(event);
-}
-
-void UITestApp::touchesBegan( ci::app::TouchEvent event )
-{
-	mXSceneRef->touchesBegan(event);
-}
-
-void UITestApp::touchesMoved( ci::app::TouchEvent event )
-{
-	mXSceneRef->touchesMoved(event);
-}
-
-void UITestApp::touchesEnded( ci::app::TouchEvent event )
-{
-	mXSceneRef->touchesEnded(event);
-}
-
-CINDER_APP_NATIVE( UITestApp, RendererGl )
+CINDER_APP(UITestApp, RendererGl, [&](App::Settings *settings) {
+	settings->setFullScreen(false);
+	settings->setMultiTouchEnabled(true);
+});

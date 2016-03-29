@@ -1,0 +1,59 @@
+﻿Build started 3/29/2016 3:22:31 PM.
+     1>Project "C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\UITest.vcxproj" on node 2 (Build target(s)).
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\Release\UITest.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:..\..\..\..\Cinder\lib\msw\x86 /LIBPATH:..\..\..\lib\msw "cinder-v120.lib" lua.lib ..\..\..\..\Cinder\blocks\QuickTime\lib\msw\x86\CVClient.lib ..\..\..\..\Cinder\blocks\QuickTime\lib\msw\x86\QTMLClient.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\Release\UITest.pdb" /MAP /SUBSYSTEM:WINDOWS /OPT:REF /LTCG /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\Release\UITest.lib" /MACHINE:X86 /SAFESEH Release\Resources.res
+         Release\lapi.obj
+         Release\lauxlib.obj
+         Release\lbaselib.obj
+         Release\lcode.obj
+         Release\ldblib.obj
+         Release\ldebug.obj
+         Release\ldo.obj
+         Release\ldump.obj
+         Release\lfunc.obj
+         Release\lgc.obj
+         Release\linit.obj
+         Release\liolib.obj
+         Release\llex.obj
+         Release\lmathlib.obj
+         Release\lmem.obj
+         Release\loadlib.obj
+         Release\lobject.obj
+         Release\lopcodes.obj
+         Release\loslib.obj
+         Release\lparser.obj
+         Release\lstate.obj
+         Release\lstring.obj
+         Release\lstrlib.obj
+         Release\ltable.obj
+         Release\ltablib.obj
+         Release\ltm.obj
+         Release\lua.obj
+         Release\luac.obj
+         Release\lundump.obj
+         Release\lvm.obj
+         Release\lzio.obj
+         Release\print.obj
+         Release\XAssetManager.obj
+         Release\XButton.obj
+         Release\XCarousel.obj
+         Release\XControl.obj
+         Release\XImage.obj
+         Release\XMovie.obj
+         Release\XNode.obj
+         Release\XRect.obj
+         Release\XScene.obj
+         Release\XScript.obj
+         Release\XSVG.obj
+         Release\XText.obj
+         Release\XUI.obj
+         Release\XWeb.obj
+         Release\UITestApp.obj
+         Generating code
+         Finished generating code
+         UITest.vcxproj -> C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\Release\UITest.exe
+     1>Done Building Project "C:\Users\joelpryde\Documents\XUI\samples\UITest\vc2013\UITest.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:21.99

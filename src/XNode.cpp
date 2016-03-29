@@ -3,17 +3,21 @@
 #include "XScript.h"
 #include "cinder/gl/gl.h"
 #include "cinder/app/App.h"
-#include "cinder/app/AppNative.h"
-#include "cinder/app/AppBasic.h"
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 
 // node types
 #include "XRect.h"
 #include "XImage.h"
+#include "XButton.h"
 #include "XMovie.h"
 #include "XText.h"
+#if defined(CINDER_AWESOMIUM)
+#include "XWeb.h"
+#endif
 #include "XSVG.h"
+#include "XCarousel.h"
+#include "XControl.h"
 
 using boost::make_tuple;
 
@@ -45,8 +49,10 @@ XNodeState::XNodeState(XNodeRef node, ci::XmlTree &xml)
 			if (ease == "None")					easeFn = EaseNone();
 			if (ease == "InQuad")				easeFn = EaseInQuad();
 			if (ease == "OutQuad")				easeFn = EaseOutQuad();
+            if (ease == "InOutQuad")			easeFn = EaseInOutQuad();
 			if (ease == "InCubic")				easeFn = EaseInCubic();
 			if (ease == "OutCubic")				easeFn = EaseOutCubic();
+            if (ease == "InOutCubic")			easeFn = EaseInOutCubic();
 			if (ease == "InQuart")				easeFn = EaseInQuart();
 			if (ease == "OutQuart")				easeFn = EaseOutQuart();
 			if (ease == "InOutQuart")			easeFn = EaseInOutQuart();
@@ -55,6 +61,7 @@ XNodeState::XNodeState(XNodeRef node, ci::XmlTree &xml)
 			if (ease == "InOutQuint")			easeFn = EaseInOutQuint();
 			if (ease == "InExpo")				easeFn = EaseInExpo();
 			if (ease == "OutExpo")				easeFn = EaseOutExpo();
+            if (ease == "InOutExpo")			easeFn = EaseInOutExpo();
 			if (ease == "InCirc")				easeFn = EaseInCirc();
 			if (ease == "OutCirc")				easeFn = EaseOutCirc();
 			if (ease == "InOutCirc")			easeFn = EaseInOutCirc();
@@ -96,7 +103,7 @@ void XNodeState::set()
 		mNode->dispatchStateEvent( mEvent );
 }
 
-XNode::XNode() : mVisible(true), mX(0.0f), mY(0.0f), mScale(ci::Vec2f(1.0f, 1.0f)), mRotation(0.0f), mOpacity(1.0f), mScript(NULL), mMouseDownInside(false)
+XNode::XNode() : mVisible(true), mEnabled(true), mX(0.0f), mY(0.0f), mScale(ci::vec2(1.0f, 1.0f)), mRotation(0.0f), mOpacity(1.0f), mScript(NULL), mMouseDownInside(false)
 {	
 }
 
@@ -129,16 +136,9 @@ void XNode::loadXml(ci::XmlTree &xml)
 	}
 
 	// get/set other properties
-	Vec2f pos;
-
-	std::string xStr = xml.getAttributeValue<std::string>( "x", "" );
-	xStr.erase(std::remove(xStr.begin(), xStr.end(), 'p'), xStr.end()); xStr.erase(std::remove(xStr.begin(), xStr.end(), 'x'), xStr.end());
-	try { pos.x = fromString<float>(xStr); } catch(...) { pos.x = 0.0f; }
-
-	std::string yStr = xml.getAttributeValue<std::string>( "y", "" );
-	yStr.erase(std::remove(yStr.begin(), yStr.end(), 'p'), yStr.end()); yStr.erase(std::remove(yStr.begin(), yStr.end(), 'x'), yStr.end());
-	try { pos.y = fromString<float>(yStr); } catch(...) { pos.y = 0.0f; }
-
+	vec2 pos;
+	pos.x = xml.getAttributeValue("x", 0.0f);
+	pos.y = xml.getAttributeValue("y", 0.0f);
 	setPos( pos );
 
 	float opacity = xml.getAttributeValue( "opacity", 1.0f );
@@ -147,17 +147,23 @@ void XNode::loadXml(ci::XmlTree &xml)
 	float rotation = xml.getAttributeValue( "rotation", 0.0f );
 	setRotation( rotation );
 
+	std::string enabledStr = xml.getAttributeValue<std::string>("enabled", "true");
+	setEnabled(enabledStr == "true" || enabledStr == "TRUE" || atoi(enabledStr.c_str()) == 1);
+
+	std::string visibleStr = xml.getAttributeValue<std::string>("visible", "true");
+	setVisible(visibleStr == "true" || visibleStr == "TRUE" || atoi(visibleStr.c_str()) == 1);
+
 	std::string maskType = xml.getAttributeValue<std::string>( "mask", "none" );
 	setMask(maskType);
 
 	// load children
-	std::string luaCode = "";
+	mLuaCode = "";
 	for ( auto &xmlChild : xml.getChildren() ) 
 	{
 		// handle cdata (lua script)
 		if (xmlChild->isCData())
 		{
-			luaCode = xmlChild->getValue();
+			mLuaCode = xmlChild->getValue();
 		}
 
 		// handle/create children
@@ -167,12 +173,22 @@ void XNode::loadXml(ci::XmlTree &xml)
 				addChild(XRect::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Image"))
 				addChild(XImage::create(*xmlChild));
+			else if (boost::iequals(xmlChild->getTag(), "Button"))
+				addChild(XButton::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Movie"))
 				addChild(XMovie::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Svg"))
 				addChild(XSVG::create(*xmlChild));
 			else if (boost::iequals(xmlChild->getTag(), "Text"))
 				addChild(XText::create(*xmlChild));
+#if defined(CINDER_AWESOMIUM)
+			else if (boost::iequals(xmlChild->getTag(), "Web"))
+				addChild(XWeb::create(*xmlChild));
+#endif
+			else if (boost::iequals(xmlChild->getTag(), "Carousel"))
+				addChild(XCarousel::create(*xmlChild));
+			else if (boost::iequals(xmlChild->getTag(), "Control"))
+                addChild(XControl::create(*xmlChild));
 
 			// special case for states
 			else if (xmlChild->getTag() == "State" && xmlChild->hasAttribute("id"))
@@ -181,13 +197,32 @@ void XNode::loadXml(ci::XmlTree &xml)
 			}
 		}
 	}
+    
+    // create script node (don't load lua code yet, wait until we have loaded properties)
+    mScript = new XScript();
+    mScript->bindNode(this);
+}
 
-	// make sure this is after loading children so that we can bind children as well
-	if (luaCode != "")
+void XNode::loadLuaCode()
+{
+    for(XNodeRef &child : mChildren)
+        child->loadLuaCode();
+    
+	if (mLuaCode != "")
+		mScript->loadString(mLuaCode);
+}
+
+void XNode::recursiveLuaMapChildren(XNode* node)
+{
+	for (int i = 0; i < node->getNumChildren(); i++)
 	{
-		mScript = new XScript(); 
-		mScript->bindNode(this);
-		mScript->loadString(luaCode);
+		if (node->getChildAt(i)->getId() != "")
+		{
+			XNode* childNode = &(*(node->getChildAt(i)));
+			luabridge::push(mScript->getState(), childNode);
+			lua_setglobal(mScript->getState(), childNode->getId().c_str());
+			recursiveLuaMapChildren(childNode);
+		}
 	}
 }
 
@@ -262,6 +297,7 @@ void XNode::removeChildren()
 {
     int numChildren = getNumChildren();
     for (int i = numChildren - 1; i >= 0; i--) {
+		mChildren[i]->removeChildren();
         removeChildAt(i);
     }    
 }
@@ -293,11 +329,15 @@ void XNode::setState( std::string stateId )
 void XNode::setProperty( const XNodeStateProperty& prop )
 {
 	if (prop.mType == "x")
-		app::timeline().apply( &mX, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn );
+		app::timeline().appendTo(&mX, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn);
 	else if (prop.mType == "y")
-		app::timeline().apply( &mY, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn );
+		app::timeline().appendTo(&mY, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn);
 	else if (prop.mType == "opacity")
-		app::timeline().apply( &mOpacity, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn );
+		app::timeline().appendTo(&mOpacity, (float)atof(prop.mValue.c_str()), prop.mTime, prop.mEaseFn);
+	else if (prop.mType == "enabled")
+		setEnabled(atoi(prop.mValue.c_str()) == 1 || prop.mValue.c_str() == "true" || prop.mValue.c_str() == "TRUE");
+	else if (prop.mType == "visible")
+		setVisible(atoi(prop.mValue.c_str()) == 1 || prop.mValue.c_str() == "true" || prop.mValue.c_str() == "TRUE");
 }
 
 void XNode::deepUpdate( double elapsedSeconds )
@@ -306,6 +346,9 @@ void XNode::deepUpdate( double elapsedSeconds )
 
         // update self
         update( elapsedSeconds );
+
+		// update guestures
+		guesturesUpdate();
 
 		// lua update
 		if (mScript)
@@ -318,17 +361,24 @@ void XNode::deepUpdate( double elapsedSeconds )
     }
 }
 
-void XNode::deepDraw(float opacity)
+void XNode::deepDraw(float opacity, glm::vec2 offset)
 {    
     if (mVisible) {
 		gl::pushModelView();
 
 		// create and settransform
-		ci::Matrix44f transform;
-		transform *= ci::Matrix44f::createTranslation( ci::Vec3f( mX, mY, 0.0f ) );
-		transform *= ci::Matrix44f::createRotation( ci::Vec3f( 0.0f, 0.0f, mRotation ) );
-		transform *= ci::Matrix44f::createScale( ci::Vec3f( mScale, 1.0f ) );
-		gl::multModelView( transform );
+		ci::mat4 transform;
+		//transform *= glm::translate( ci::vec3( mX, mY, 0.0f ) );
+		//transform *= glm::rotate( ci::vec3( 0.0f, 0.0f, mRotation );
+		//transform *= glm::scale( ci::vec3( mScale, 1.0f ) );
+		//gl::multModelMatrix( transform );
+		//gl::multModelView( transform );
+		gl::translate(mX, mY);
+		gl::rotate(mRotation);
+		gl::scale(mScale);
+
+		// apply guesture transformation
+		gl::multModelMatrix(mGuesturesMatrix);
 
 		gl::enableAlphaBlending();
 
@@ -394,12 +444,14 @@ void XNode::deepDraw(float opacity)
     }     
 }
 
-Matrix44f XNode::getConcatenatedTransform() const
+mat4 XNode::getConcatenatedTransform() const
 {
-	Matrix44f transform = mTransform;
-	transform *= Matrix44f::createTranslation( Vec3f( mX, mY, 0.0f ) );
-	transform *= Matrix44f::createRotation( Vec3f( mRotation, 0.0f, 0.0f ) );
-	transform *= Matrix44f::createScale( Vec3f( mScale, 1.0f ) );
+	mat4 transform = mTransform;
+	
+	transform *= glm::translate(vec3(mX, mY, 0.0f));
+	transform *= glm::rotate(mRotation, vec3(0.0f, 0.0f, 1.0f));
+	transform *= glm::scale(vec3(mScale, 1.0f));
+	transform *= mGuesturesMatrix;
 
     if ( XNodeRef parent = mParent.lock() ) {
         return parent->getConcatenatedTransform() * transform;
@@ -436,23 +488,24 @@ std::string XNode::getMask() const
 	return "";
 }
 
-Vec2f XNode::localToGlobal( const Vec2f &pos )
+vec2 XNode::localToGlobal( const vec2 &pos )
 {
-    Vec3f globalPos = (getConcatenatedTransform() * Vec3f( pos.x, pos.y, 0));
-    return (globalPos).xy();
+    vec4 globalPos = (getConcatenatedTransform() * vec4( pos.x, pos.y, 0, 1));
+	return vec2(globalPos.x, globalPos.y);;
 }
 
-Vec2f XNode::globalToLocal( const Vec2f &pos )
+vec2 XNode::globalToLocal( const vec2 &pos )
 {
-	Matrix44f concatTransform = getConcatenatedTransform();
-    Matrix44f invMtx = concatTransform.inverted();
-    return (invMtx * Vec3f(pos.x,pos.y,0)).xy();    
+	mat4 concatTransform = getConcatenatedTransform();
+    mat4 invMtx = glm::inverse(concatTransform);
+	vec4 v = invMtx * vec4(pos.x, pos.y, 0, 1);
+	return vec2(v.x, v.y);
 }
 
 
 bool XNode::deepMouseDown( ci::app::MouseEvent event )
 {
-	if (!mVisible)
+	if (!mVisible || !mEnabled)
         return false;
 
     bool consumed = false;
@@ -463,7 +516,7 @@ bool XNode::deepMouseDown( ci::app::MouseEvent event )
 	{
         if (node->deepMouseDown(event)) 
 		{
-            consumed = true;
+            //consumed = true;
             break; // first child wins (mouse can't affect more than one child node)
         }
     }    
@@ -483,7 +536,7 @@ bool XNode::deepMouseDown( ci::app::MouseEvent event )
 
 bool XNode::deepMouseUp( ci::app::MouseEvent event )
 {
-	if (!mVisible)
+	if (!mVisible || !mEnabled)
         return false;
 
     // in this current implementation, children only receive mouseUp calls 
@@ -493,7 +546,7 @@ bool XNode::deepMouseUp( ci::app::MouseEvent event )
 	{
 		if (node->deepMouseUp(event)) 
 		{
-			consumed = true;
+			//consumed = true;
 			break;
 		}
 	}
@@ -503,7 +556,8 @@ bool XNode::deepMouseUp( ci::app::MouseEvent event )
 		if (mMouseDownInside)
 		{
 			// check self
-			consumed = mouseUpInternal(event);
+			//consumed = mouseUpInternal(event);
+            consumed = mouseUpInternal(event);
 			if (consumed) 
 			{
 				XNodeRef thisRef = shared_from_this();
@@ -518,7 +572,7 @@ bool XNode::deepMouseUp( ci::app::MouseEvent event )
 
 bool XNode::deepMouseDrag( ci::app::MouseEvent event )
 {
-	if (!mVisible)
+	if (!mVisible || !mEnabled)
         return false;
 
     // in this current implementation, children only receive mouseDrag calls 
@@ -549,9 +603,9 @@ bool XNode::deepMouseDrag( ci::app::MouseEvent event )
 
 bool XNode::deepTouchBegan( TouchEvent::Touch touch )
 {
-    if (!mVisible) {
+	if (!mVisible || !mEnabled)
         return false;
-    }
+    
     bool consumed = false;
     // check children
     // use reverse so that things that will be drawn on top are checked first
@@ -576,8 +630,10 @@ bool XNode::deepTouchBegan( TouchEvent::Touch touch )
 
 bool XNode::deepTouchMoved( TouchEvent::Touch touch )
 {
-    if (!mVisible)
+	if (!mVisible || !mEnabled)
         return false;
+
+	//app::console() << "id: " << touch.getId() << std::endl;
 
     // in this current implementation, children only receive touchMoved calls 
     // if they returned true for the touch with the same ID in touchesBegan
@@ -600,7 +656,7 @@ bool XNode::deepTouchMoved( TouchEvent::Touch touch )
 
 bool XNode::deepTouchEnded( TouchEvent::Touch touch )
 {
-    if (!mVisible)
+	if (!mVisible || !mEnabled)
         return false;
 
     // in this current implementation, children only receive touchEnded calls 
@@ -623,9 +679,10 @@ bool XNode::deepTouchEnded( TouchEvent::Touch touch )
     return consumed;
 }
 
-bool XNode::deepHitTest( const Vec2f &screenPos )
+bool XNode::deepHitTest( const vec2 &screenPos )
 {
-    if (mVisible) {
+	if (mVisible || !mEnabled)
+	{
         // test children
         for(XNodeRef &child : mChildren) {
             if ( child->deepHitTest( screenPos ) ) {
@@ -758,16 +815,67 @@ void XNode::dispatchTouchEnded( XSceneEventRef eventRef )
     }
 }
 
+ci::audio::VoiceRef XNode::getAudioVoice( std::string filename )
+{
+    ci::audio::VoiceRef voice;
+    
+    // add the audio voice if it does not already exist
+    if (mVoiceMap.find(filename) != mVoiceMap.end())
+        voice = mVoiceMap.find(filename)->second;
+    else
+    {
+        voice = audio::Voice::create( audio::load( loadAsset( filename ) ) );
+        mVoiceMap[filename] = voice;
+    }
+    
+    return voice;
+}
+
+void XNode::playSound( std::string filename )
+{
+    // get the audio voice if it does not already exist
+    ci::audio::VoiceRef voice = getAudioVoice(filename);
+    if (voice)
+        voice->start();
+}
+
+void XNode::luaDelay( std::string luaCode, float delay )
+{
+    // Simple functor to execute some lua code after a period of time
+    struct DelayCode
+    {
+        DelayCode( XNode* node, std::string code ) : mNode( node ), mCode( code ) {}
+        void operator()()
+        {
+            mNode->getScript()->loadString( mCode );
+        }
+        XNode* mNode;
+        std::string mCode;
+    };
+    
+    timeline().add( DelayCode( this, luaCode ), timeline().getCurrentTime() + delay );
+}
+
 ci::ColorA xui::hexToColor( const std::string &hex )
 {
 	std::stringstream converter(hex);
 	unsigned int value;
 	converter >> std::hex >> value;
 
-	float a = ((value >> 24) & 0xFF) / 255.0f;
-	float r = ((value >> 16) & 0xFF) / 255.0f;
-	float g = ((value >> 8) & 0xFF) / 255.0f;
-	float b = ((value) & 0xFF) / 255.0f;
+    float r=1.0f, g=1.0f, b=1.0f, a=1.0f;
+    if (hex.size() >= 10)
+    {
+        a = ((value >> 24) & 0xFF) / 255.0f;
+        r = ((value >> 16) & 0xFF) / 255.0f;
+        g = ((value >> 8) & 0xFF) / 255.0f;
+        b = ((value) & 0xFF) / 255.0f;
+    }
+    else
+    {
+        r = ((value >> 16) & 0xFF) / 255.0f;
+        g = ((value >> 8) & 0xFF) / 255.0f;
+        b = ((value) & 0xFF) / 255.0f;
+    }
 
 	return ci::ColorA(r, g, b, a);
 }

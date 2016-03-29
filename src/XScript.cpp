@@ -1,12 +1,19 @@
 #include "cinder/Utilities.h"
 
+#include "XUI.h"
 #include "XScript.h"
+#include "XScene.h"
 #include "XNode.h"
 #include "XRect.h"
 #include "XText.h"
 #include "XImage.h"
 #include "XMovie.h"
+#if defined(CINDER_AWESOMIUM)
+#include "XWeb.h"
+#endif
 #include "XSVG.h"
+#include "XCarousel.h"
+#include "XControl.h"
 
 #include "cinder/gl/gl.h"
 
@@ -28,8 +35,8 @@ struct XNodeHelper
   static void setX(XNode* node, float value) { node->setX(value); }
   static void setY(XNode* node, float value) { node->setY(value); }
   static void setRotation(XNode* node, float value) { node->setRotation(value); }
-  static void setScaleX(XNode* node, float value) { node->setScale(Vec2f(value, node->getScale().y)); }
-  static void setScaleY(XNode* node, float value) { node->setScale(Vec2f(node->getScale().x, value)); }
+  static void setScaleX(XNode* node, float value) { node->setScale(vec2(value, node->getScale().y)); }
+  static void setScaleY(XNode* node, float value) { node->setScale(vec2(node->getScale().x, value)); }
   static void setOpacity(XNode* node, float value) { node->setOpacity(value); }
 };
 
@@ -41,14 +48,13 @@ struct XTextHelper
     
 int XScript::panic( lua_State *L )
 {
-    app::console() << "Lua panic ocurred! : " << lua_tostring(L, -1) << endl;
-    app::console() << "Closing state" << endl;
+    XUI::getInstance()->consoleOut("Lua panic ocurred! : " + std::string(lua_tostring(L, -1)));
     return 0;
 }
 
 void lua_print(std::string msg) 
 {
-	app::console() << "LUA: " << msg << endl;
+    XUI::getInstance()->consoleOut("LUA: " + msg);
 }
     
 void lua_uniform_float(ci::gl::GlslProg* prog, const char* name, float value) 
@@ -59,9 +65,27 @@ void lua_uniform_bool(ci::gl::GlslProg* prog, const char* name, bool value)
 {
 	prog->uniform(name, value);
 }
-void lua_uniform_int(ci::gl::GlslProg* prog, const char* name, int value) 
+void lua_uniform_int(ci::gl::GlslProg* prog, const char* name, int value)
 {
 	prog->uniform(name, value);
+}
+    
+void pushModalScene(std::string xuiScene)
+{
+    // push a scene onto the stack
+    XUI::getInstance()->pushScene(xuiScene);
+}
+    
+void popModalScene(std::string luaCommand)
+{
+    // pop a scene off of the stack
+    XUI::getInstance()->popScene(luaCommand);
+}
+    
+void transitionToScene(std::string scene, std::string transitionType, float transitionDuration)
+{
+    // pop a scene off of the stack
+    XUI::getInstance()->transitionToXUIScene(scene, transitionType, transitionDuration);
 }
     
 XScript::XScript()
@@ -86,51 +110,76 @@ void XScript::bindNode(XNode* node)
 		.addFunction("uniform_float", lua_uniform_float)
 		.addFunction("uniform_bool", lua_uniform_bool)
 		.addFunction("uniform_int", lua_uniform_int)
+        .addFunction("pushModalScene", pushModalScene)
+        .addFunction("popModalScene", popModalScene)
+        .addFunction("transitionToScene", transitionToScene)
 		.beginClass<ci::gl::GlslProg>("GlslProg")
-			.addConstructor <void (*) (const char *vertexShader, const char *fragmentShader)> ()
+			//.addConstructor <void (*) (const char *vertexShader, const char *fragmentShader)> ()
 			.addFunction ("bind", &ci::gl::GlslProg::bind)
-			.addStaticFunction ("unbind", &ci::gl::GlslProg::unbind)
+			//.addStaticFunction ("unbind", &ci::gl::GlslProg::unbind)
 		.endClass()
 		.beginClass<ci::ColorA>("Color")
 			.addConstructor <void (*) (float, float, float)> ()
 			.addConstructor <void (*) (float, float, float, float)> ()
 		.endClass()
 		.beginClass<XNode>("XNode")
+			.addProperty("visible", &XNode::getVisible, &XNode::setVisible)
+			.addProperty("enabled", &XNode::getEnabled, &XNode::setEnabled)
 			.addProperty("x", &XNode::getX, &XNode::setX)
 			.addProperty("y", &XNode::getY, &XNode::setY)
 			.addProperty("rotation", &XNode::getRotation, &XNode::setRotation)
 			.addProperty("scaleX", &XNodeHelper::getScaleX, &XNodeHelper::setScaleX)
 			.addProperty("scaleY", &XNodeHelper::getScaleY, &XNodeHelper::setScaleY)
 			.addProperty("opacity", &XNode::getOpacity, &XNode::setOpacity)
+            .addFunction("setState", &XNode::setState)
+            .addFunction("playSound", &XNode::playSound)
+            .addFunction("delay", &XNode::luaDelay)
+
+			// rect
 			.addProperty("width", &XNode::getWidth, &XNode::setWidth)
 			.addProperty("height", &XNode::getHeight, &XNode::setHeight)
 			.addProperty("color", &XNode::getColor, &XNode::setColor)
+            .addProperty("strokeColor", &XNode::getStrokeColor, &XNode::setStrokeColor)
+            .addProperty("cornerRadius", &XNode::getCornerRadius, &XNode::setCornerRadius)
+			.addProperty("mask", &XNode::getMask, &XNode::setMask)
+			.addProperty("panEnabled", &XNode::getPanEnabled, &XNode::setPanEnabled)
+			.addProperty("scaleEnabled", &XNode::getScaleEnabled, &XNode::setScaleEnabled)
+			.addProperty("rotateEnabled", &XNode::getRotateEnabled, &XNode::setRotateEnabled)
+
+			// text
 			.addProperty("text", &XNode::getText, &XNode::setText)
 			.addProperty("textWidth", &XNode::getTextWidth)
 			.addProperty("textHeight", &XNode::getTextHeight)
-			.addProperty("mask", &XNode::getMask, &XNode::setMask)
+
+			// movie
+			.addProperty("loop", &XNode::getLoop, &XNode::setLoop)
+			.addFunction("seekToStart", &XNode::seekToStart)
+			.addFunction("play", &XNode::play)
+			.addFunction("stop", &XNode::stop)
+
+			// carousel
+			.addProperty("carouselEnabled", &XNode::getCarouselEnabled, &XNode::setCarouselEnabled)
+
         .endClass()
 		.deriveClass <XRect, XNode> ("XRect")
-			//.addProperty("color", &XRect::getColor, &XRect::setColor)
+		.endClass()
+		.deriveClass <XMovie, XRect>("XMovie")
 		.endClass()
 		.deriveClass <XText, XRect> ("XText")
-			//.addProperty("text", &XText::getText, &XText::setText)
-		.endClass();
+		.endClass()
+#if defined(CINDER_AWESOMIUM)
+		.deriveClass <XWeb, XRect>("XWeb")
+		.endClass()
+#endif
+		.deriveClass <XCarousel, XRect>("XCarousel")
+		.endClass()
+        .deriveClass <XCarousel, XRect>("XControl")
+        .endClass();
 
 	luabridge::push(mState, &(*(node)));
 	lua_setglobal(mState, "this");
-
-	for (int i=0; i < node->getNumChildren(); i++)
-	{
-		if (node->getChildAt(i)->getId() != "")
-		{
-			XNode* childNode = &(*(node->getChildAt(i)));
-			luabridge::push(mState, childNode);
-			lua_setglobal(mState, node->getChildAt(i)->getId().c_str());
-		}
-	}
 }
-    
+   
 std::string XScript::getErrorMessage()
 {
     std::ostringstream errorMessage;
@@ -158,7 +207,7 @@ void XScript::loadString( const std::string& script )
     if( luaL_loadstring( mState, script.c_str() ) != 0 ) {
         mErrors = true;
         mLastErrorString = getErrorMessage();
-        app::console() << mLastErrorString << endl;
+        XUI::getInstance()->consoleOut(mLastErrorString);
         return;
     }
     else mErrors = false;
@@ -167,7 +216,7 @@ void XScript::loadString( const std::string& script )
     if( lua_pcall( mState, 0, LUA_MULTRET, 0 ) != 0 ) {
         mErrors = true;
         mLastErrorString = getErrorMessage();
-        app::console() << mLastErrorString << endl;
+        XUI::getInstance()->consoleOut(mLastErrorString);
         return;
     }
     else mErrors = false;
@@ -202,8 +251,52 @@ void XScript::call( const std::string& function )
 	{
 		mErrors = true;
 		mLastErrorString = e.what();
-		ci::app::console() << "Lua Error trying to call " << function << " : " << std::endl << e.what() << std::endl;
+        XUI::getInstance()->consoleOut("Lua Error trying to call " + function + " : " + e.what());
 	}
+}
+
+void XScript::LuaGlobalBindAllChildren(XNode* node)
+{
+	// create giant list of all children
+	std::vector<XNode*> allChildrenList;
+	std::function<void(XNode*)> recurseBuildListFn;
+	recurseBuildListFn = [&allChildrenList, &recurseBuildListFn](XNode* node) {
+		for (int i = 0; i < node->getNumChildren(); i++)
+		{
+			allChildrenList.push_back(&(*node->getChildAt(i)));
+			recurseBuildListFn(&(*node->getChildAt(i)));
+		}
+	};
+	recurseBuildListFn(node);
+
+	// go through all children and lua bind every other node
+	for (unsigned int i = 0; i < allChildrenList.size(); i++)
+	{
+		for (unsigned int j = 0; j < allChildrenList.size(); j++)
+		{
+			if (i != j && 
+				allChildrenList[j]->getId() != "" &&
+				allChildrenList[i]->getScript())
+			{
+				XNode* bindNode = &(*(allChildrenList[j]));
+				luabridge::push(allChildrenList[i]->getScript()->getState(), bindNode);
+				lua_setglobal(allChildrenList[i]->getScript()->getState(), bindNode->getId().c_str());
+			}
+		}
+	}
+    
+    // finally bind all children to the top node too
+    for (unsigned int j = 0; j < allChildrenList.size(); j++)
+    {
+        if (allChildrenList[j]->getId() != "" &&
+            node->getScript())
+        {
+            XNode* bindNode = &(*(allChildrenList[j]));
+            luabridge::push(node->getScript()->getState(), bindNode);
+            lua_setglobal(node->getScript()->getState(), bindNode->getId().c_str());
+        }
+    }
+
 }
 
 }

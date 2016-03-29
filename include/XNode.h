@@ -15,6 +15,8 @@
 #include "cinder/Xml.h"
 #include "cinder/Color.h"
 #include "cinder/Timeline.h"
+#include "cinder/audio/Voice.h"
+#include "cinder/audio/Source.h"
 
 #include "XScript.h"
 
@@ -111,13 +113,15 @@ protected:
     
 public:
 
-	typedef	enum { NodeTypeNode, NodeTypeRect, NodeTypeText, NodeTypeImage, NodeTypeMovie, NodeTypeSVG } NodeType;
-	typedef enum MaskType { MaskNone, MaskClear, MaskWrite, MaskNotEqual, MaskEqual };
+	typedef	enum { NodeTypeNode, NodeTypeRect, NodeTypeText, NodeTypeImage, NodeTypeButton, NodeTypeMovie, NodeTypeSVG, NodeTypeWeb, NodeTypeCarousel, NodeTypeControl } NodeType;
+	typedef enum { MaskNone, MaskClear, MaskWrite, MaskNotEqual, MaskEqual } MaskType;
 	virtual XNode::NodeType getType() { return NodeTypeNode; }
 
     static XNodeRef create();
 	static XNodeRef create( ci::XmlTree &xml );
 	void loadXml(ci::XmlTree &xml);
+	void loadLuaCode();
+	void recursiveLuaMapChildren(XNode* node);
 
     // sub-classing is to be expected
     virtual ~XNode() {}
@@ -142,8 +146,12 @@ public:
 // VISIBILITY
     
     // if you have behaviors to toggle when things are visible or not, override these
-    virtual void setVisible( bool visible = true ) { mVisible = visible; }
-    virtual bool isVisible() { return mVisible; }
+    virtual void setVisible( bool visible ) { mVisible = visible; }
+    virtual bool getVisible() const { return mVisible; }
+
+	// if you have behaviors to toggle when things are visible or not, override these
+	virtual void setEnabled(bool enabled) { mEnabled = enabled; }
+	virtual bool getEnabled() const { return mEnabled; }
     
 // LOOP METHODS
     
@@ -158,16 +166,20 @@ public:
 
 	void setX( float x )						{ mX = x; }
 	void setY( float y )						{ mY = y; }
-	void setPos( const ci::Vec2f &pos )			{ mX = pos.x; mY = pos.y; }
+	void setPos( const ci::vec2 &pos )			{ mX = pos.x; mY = pos.y; }
 	void setRotation( float rotation )			{ mRotation = rotation; }
-	void setScale( const ci::Vec2f &scale )		{ mScale = scale; }
+	void setScale( const ci::vec2 &scale )		{ mScale = scale; }
 	void setOpacity( float opacity )			{ mOpacity = opacity; }
 
 	float getX() const							{ return mX; }
 	float getY() const							{ return mY; }
 	float getRotation() const					{ return mRotation; }
-	ci::Vec2f getScale() const					{ return mScale; }
+	ci::vec2 getScale() const					{ return mScale; }
 	float getOpacity() const					{ return mOpacity; }
+
+	ci::Anim<float>* getXAnim()					{ return &mX; }
+	ci::Anim<float>* getYAnim()					{ return &mY; }
+	ci::Anim<float>* getOpacityAnim()			{ return &mOpacity; }
 
 	virtual float getWidth() const				{ return 0.0f; }
 	virtual void setWidth(float value)			{ }
@@ -176,20 +188,52 @@ public:
 
 	virtual ci::ColorA getColor() const 		{ return ci::ColorA(); }
 	virtual void setColor( const ci::ColorA &color )	{ }
+    virtual ci::ColorA getStrokeColor() const   { return ci::ColorA(); }
+    virtual void setStrokeColor( const ci::ColorA &color ) { }
+    virtual float getCornerRadius() const       { return 0.0f; }
+    virtual void setCornerRadius(float value)   { }
+	virtual void setMask(std::string maskType);
+	virtual std::string getMask() const;
+
+	// guestures
+	virtual bool getPanEnabled() const			{ return false; }
+	virtual void setPanEnabled(bool panEnabled) { }
+	virtual bool getRotateEnabled() const		{ return false; }
+	virtual void setRotateEnabled(bool rotateEnabled) { }
+	virtual bool getScaleEnabled() const		{ return false; }
+	virtual void setScaleEnabled(bool scaleEnabled) { }
+
+	// text
 	virtual std::string getText() const					{ return ""; }
-	virtual void setText( const std::string& text )		{ }
+	virtual void setText( const std::string& text )		{
+        cinder::app::console() << "test" << std::endl;
+    }
 	virtual int getTextWidth() const			{ return 0; }
 	virtual int getTextHeight() const			{ return 0; }
 
-	virtual void setMask( std::string maskType );
-	virtual std::string getMask() const;
+	// movie
+	virtual bool getLoop() const { return false; }
+	virtual void setLoop(bool loop) { }
+	virtual void seekToStart() { }
+	virtual void stop() { }
+	virtual void play() { }
+    
+    // play audio
+    void playSound( std::string filename );
+    
+    // execute some lua code after a period of time
+    void luaDelay( std::string luaCode, float delay );
+
+	// carousel
+	virtual bool getCarouselEnabled() const		{ return false; }
+	virtual void setCarouselEnabled(bool carouselEnabled) { }
     
     // override getConcatenatedTransform to change the behavior of these:
-    ci::Vec2f localToGlobal( const ci::Vec2f &pos );
-    ci::Vec2f globalToLocal( const ci::Vec2f &pos );
+    ci::vec2 localToGlobal( const ci::vec2 &pos );
+    ci::vec2 globalToLocal( const ci::vec2 &pos );
     
     // if you have extra transforms/rotations that get applied in draw, override this too:
-    virtual ci::Matrix44f getConcatenatedTransform() const;    
+    virtual ci::mat4 getConcatenatedTransform() const;    
     
 // ID METHODS
         
@@ -218,15 +262,21 @@ public:
     // touchMoved/Ended will only be called for touch IDs that returned true in touchBegan
     virtual bool touchMovedInternal( ci::app::TouchEvent::Touch touch ) { return false; }
     virtual bool touchEndedInternal( ci::app::TouchEvent::Touch touch ) { return false; }
+
+	// guestures interactions
+	virtual void guesturesUpdate() {}
+	virtual void guesturesBeganInternal(ci::app::TouchEvent event) { }
+	virtual void guesturesMovedInternal(ci::app::TouchEvent event) { }
+	virtual void guesturesEndedInternal(ci::app::TouchEvent event) { }
     
     // override deepHitTest as well if you want to skip hit-testing children
-    virtual bool hitTest( const ci::Vec2f &screenPos ) { return false; }
+    virtual bool hitTest( const ci::vec2 &screenPos ) { return false; }
     
 // RECURSIVE METHODS
     
     // recurse to children and call draw()
     // (public so it can be overridden, but generally considered internal)
-    virtual void deepDraw(float opacity = 1.0f);
+    virtual void deepDraw(float opacity = 1.0f, glm::vec2 offset = glm::vec2(0, 0));
     
     // recurse to children and call update()
     // (public so it can be overridden, but generally considered internal)
@@ -246,7 +296,7 @@ public:
     
     // recurse to children and call hitTest
     // override this if you want to skip hitTesting children
-    virtual bool deepHitTest( const ci::Vec2f &screenPos );
+    virtual bool deepHitTest( const ci::vec2 &screenPos );
     
     // notify children that mRoot is valid
     virtual void deepSetRoot( XSceneRef root );
@@ -305,6 +355,7 @@ public:
     void dispatchTouchEnded( XSceneEventRef eventRef );
     
 // LUA
+	XScript* getScript() { return mScript; }
 	void luaCall( const std::string& function )
 	{
 		if (mScript)
@@ -337,7 +388,7 @@ public:
 		if (mScript)
 			mScript->call( function, arg1, arg2, arg3, arg4 );
 	}
-    
+        
 protected:
     
     // weakrefs because we don't "own" these, they're just convenient
@@ -346,21 +397,26 @@ protected:
     XSceneWeakRef mRoot; // aka "stage"
 
 	// lua script
+    std::string mLuaCode;
 	XScript* mScript;
 
     // and this is really all we have, everything else is recursion
     std::string mId;
-    bool mVisible;    
+    bool mVisible;
+	bool mEnabled;
 	bool mMouseDownInside;
 
-	ci::Matrix44f mTransform;
+	ci::mat4 mTransform;
 
 	// position, opacity, rotation, scale
 	ci::Anim<float> mX;
 	ci::Anim<float> mY;
 	ci::Anim<float> mOpacity;
-	ci::Vec2f mScale;
+	ci::vec2 mScale;
 	float mRotation;
+
+	// guesture transformation
+	glm::mat4	mGuesturesMatrix;
 
 	// masking
 	MaskType mMaskType;
@@ -373,6 +429,10 @@ protected:
 
     // for generating IDs:
     static int sNextNodeId;
+    
+    // audio voices
+    std::map<std::string, ci::audio::VoiceRef> mVoiceMap;
+    ci::audio::VoiceRef getAudioVoice( std::string filename );
     
     // for event passing
 	ci::CallbackMgr<bool(XSceneEventRef)> mCbTouchBegan;

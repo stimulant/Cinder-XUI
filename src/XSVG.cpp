@@ -1,6 +1,7 @@
 #include "cinder/app/App.h"
 #include "cinder/ImageIO.h"
 #include "XSVG.h"
+#include "cinder/gl/gl.h"
 #include "cinder/svg/SvgGl.h"
 #include "XAssetManager.h"
 
@@ -11,13 +12,13 @@ using namespace ci;
 using namespace xui;
 using namespace svg;
 
-ci::gl::GlslProg	XSVG::mSVGShader;
+ci::gl::GlslProgRef	XSVG::mSVGShader;
 bool				XSVG::mSVGShaderCreated = false;;
 
 #define REGISTER_SHADER(file1, file2, shader) \
 XAssetManager::load( file1, file2, [this](DataSourceRef vert,DataSourceRef frag){ \
     try{ \
-        shader = gl::GlslProg( vert, frag ); \
+        shader = gl::GlslProg::create( vert, frag ); \
     } catch( gl::GlslProgCompileExc exc ) { \
 		app::console() << exc.what() << std::endl; \
 	} \
@@ -48,18 +49,18 @@ XSVG::XSVG()
 void XSVG::draw(float opacity)
 {
 	// set opacity via shader
-	mSVGShader.bind();
-	mSVGShader.uniform("opacity", opacity * mOpacity);
+	mSVGShader->bind();
+	mSVGShader->uniform("opacity", opacity * mOpacity);
 	
     // draw svg
     gl::draw( *mDoc );
 
-	mSVGShader.unbind();
+	//mSVGShader.unbind();
 }
 
 void XSVG::loadXml( ci::XmlTree &xml )
 {
-	std::string texture;
+	XRect::loadXml(xml);
 
 	// if we have an svg child, load that
 	std::shared_ptr<rapidxml::xml_document<char> > xmlDoc = xml.createRapidXmlDoc();
@@ -70,8 +71,6 @@ void XSVG::loadXml( ci::XmlTree &xml )
 	std::vector<char> bytesVec(svgStr.begin(), svgStr.end());
 	void *bytes = &bytesVec[0];
 	unsigned int size = svgStr.size();
-	DataSourceRef svgData = DataSourceBuffer::create(Buffer(bytes, size));
+	DataSourceRef svgData = DataSourceBuffer::create(Buffer::create(bytes, size));
 	mDoc = svg::Doc::create(svgData);
-
-	XRect::loadXml( xml );
 }

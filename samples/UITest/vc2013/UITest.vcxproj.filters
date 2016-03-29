@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="XUI">
+      <UniqueIdentifier>{403f23df-271d-47c0-9888-9c8c751098b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XUI\src">
+      <UniqueIdentifier>{932847bd-c15a-456f-aada-3fd428eabc46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XUI\include">
+      <UniqueIdentifier>{b6814b43-5430-4a0d-b0fe-02fa124945a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XUI\src\lua">
+      <UniqueIdentifier>{4e0ccece-14e6-4928-803c-1c588bca4aae}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\UITestApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\include\XImage.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XLuaBindings.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XMovie.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XNode.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XRect.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XScene.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XScript.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XSVG.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XText.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XUI.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XWeb.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XAssetManager.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XButton.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XCarousel.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\XControl.h">
+      <Filter>XUI\include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\XNode.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XRect.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XScene.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XScript.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XSVG.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XText.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XUI.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XWeb.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XAssetManager.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XButton.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XCarousel.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XControl.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XImage.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\XMovie.cpp">
+      <Filter>XUI\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lstate.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lstring.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lstrlib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ltable.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ltablib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ltm.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lua.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\luac.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lundump.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lvm.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lzio.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\print.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lapi.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lauxlib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lbaselib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lcode.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ldblib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ldebug.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ldo.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\ldump.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lfunc.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lgc.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\linit.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\liolib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\llex.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lmathlib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lmem.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\loadlib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lobject.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lopcodes.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\loslib.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\lua\lparser.c">
+      <Filter>XUI\src\lua</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

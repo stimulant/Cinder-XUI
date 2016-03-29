@@ -21,7 +21,11 @@ public:
 
 	void loadXml( ci::XmlTree &xml );
 	virtual std::string getText() const { return mTextBox.getText(); }
-	virtual void setText( const std::string& text ) { mTextBox.setText( text ); update(); }
+	virtual void setText( const std::string& text )
+    {
+        mTextBox.setText( text ); update();
+    }
+    
 	virtual int getTextWidth() const { return (int)mTextBox.measure().x; }
 	virtual int getTextHeight() const { return (int)mTextBox.measure().y; }
 	virtual void setTextAlignment(std::string alignmentName);
@@ -33,7 +37,7 @@ protected:
 	void update();
 
 	ci::TextBox	mTextBox;
-	ci::Surface	mTextSurface;
+	ci::gl::TextureRef mTextTexture;
 };
 
 }

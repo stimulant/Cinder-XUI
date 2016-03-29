@@ -1,14 +1,13 @@
 #pragma once
 
-#include "cinder/app/AppNative.h"
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/App.h"
 
 extern "C" {
 	#include "lua/lauxlib.h"
 	#include "lua/lua.h"
 	#include "lua/lualib.h"
 }
-#include "LuaBridge.h"
+#include "LuaBridge/LuaBridge.h"
 
 namespace xui {
 
@@ -26,6 +25,7 @@ public:
 	std::string getLastErrors();
     void gc();
 	bool functionExists( const std::string& function );
+	static void LuaGlobalBindAllChildren(XNode* node);
 
 	// call lua functions
 	void call( const std::string& function );

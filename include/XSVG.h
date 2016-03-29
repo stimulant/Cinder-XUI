@@ -26,7 +26,7 @@ public:
 protected:
 	XSVG();
     
-	static ci::gl::GlslProg		mSVGShader;
+	static ci::gl::GlslProgRef	mSVGShader;
 	static bool					mSVGShaderCreated;
     ci::svg::DocRef				mDoc;
 };
