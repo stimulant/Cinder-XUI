@@ -23,11 +23,6 @@ __Features:__
     * Image Carousel
     * Control
 
-__Table of Contents:__
-
-[TOC]
-
-
 # Compiling from Source
 
 ## Initial Project Setup
@@ -45,7 +40,9 @@ git submodule update --init --recursive
 ## Awesomium Setup
 (necessary if you want to use the Web Node to view HTML/Web Content)
 
+1. Add the [Cinder-Awesomium](https://github.com/gaborpapp/Cinder-Awesomium) block to your project.
 1. Unzip the Awesomium libs from [here](https://app.box.com/s/gs0l1dgwbn0fr26wztixy1gjr4q2v9wo) into the blocks\Awesomium directory (copy the build directory into the Awesomium folder).
+2. Make sure your project defines the CINDER_AWESOMIUM preprocessor definition.
 
 ## Updating Project
 
